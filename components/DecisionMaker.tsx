@@ -97,13 +97,36 @@ export default function DecisionMaker() {
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  function startLoading() {
+  async function startLoading() {
     setStep(2);
     setLoadingStep(0);
+
+    // Run the visual animation in parallel with the API call
+    const animationDone = new Promise<void>(resolve =>
+      setTimeout(resolve, 2500)
+    );
     setTimeout(() => setLoadingStep(1), 500);
     setTimeout(() => setLoadingStep(2), 1050);
     setTimeout(() => setLoadingStep(3), 1650);
-    setTimeout(() => setStep(3), 2500);
+
+    const apiFetch = fetch('/api/generate-matrix', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ decision, constraints, preferences }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data.criteria)) setCriteria(data.criteria);
+        if (Array.isArray(data.options))  setOptions(data.options);
+      })
+      .catch(err => {
+        // On error keep the demo data so the app stays usable
+        console.error('Matrix generation failed:', err);
+      });
+
+    // Advance to Screen 3 only after BOTH animation and API call finish
+    await Promise.all([animationDone, apiFetch]);
+    setStep(3);
   }
 
   function goBack() {
