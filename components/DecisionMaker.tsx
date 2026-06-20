@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { trackEvent } from '@/lib/analytics';
 
 type Criterion = {
   name: string;
@@ -98,8 +99,19 @@ export default function DecisionMaker() {
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   async function startLoading() {
+    trackEvent('decision_started', {
+      has_decision_text: decision.trim().length > 0,
+      constraint_count: constraints.length,
+      preference_count: preferences.length,
+    });
+
     setStep(2);
     setLoadingStep(0);
+
+    trackEvent('screen_viewed', { screen: 'loading' });
+    trackEvent('matrix_generation_started');
+
+    const startTime = Date.now();
 
     // Run the visual animation in parallel with the API call
     const animationDone = new Promise<void>(resolve =>
@@ -118,15 +130,23 @@ export default function DecisionMaker() {
       .then(data => {
         if (Array.isArray(data.criteria)) setCriteria(data.criteria);
         if (Array.isArray(data.options))  setOptions(data.options);
+        trackEvent('matrix_generation_succeeded', {
+          duration_ms: Date.now() - startTime,
+          criteria_count: data.criteria?.length ?? 0,
+          options_count: data.options?.length ?? 0,
+        });
       })
       .catch(err => {
-        // On error keep the demo data so the app stays usable
         console.error('Matrix generation failed:', err);
+        trackEvent('matrix_generation_failed', {
+          duration_ms: Date.now() - startTime,
+        });
       });
 
     // Advance to Screen 3 only after BOTH animation and API call finish
     await Promise.all([animationDone, apiFetch]);
     setStep(3);
+    trackEvent('screen_viewed', { screen: 'matrix' });
   }
 
   function goBack() {
@@ -136,17 +156,29 @@ export default function DecisionMaker() {
 
   function addConstraint() {
     const v = constraintInput.trim();
-    if (v) { setConstraints(prev => [...prev, v]); setConstraintInput(''); }
+    if (v) {
+      setConstraints(prev => [...prev, v]);
+      setConstraintInput('');
+      trackEvent('constraint_added', { total: constraints.length + 1 });
+    }
   }
 
   function addPreference() {
     const v = preferenceInput.trim();
-    if (v) { setPreferences(prev => [...prev, v]); setPreferenceInput(''); }
+    if (v) {
+      setPreferences(prev => [...prev, v]);
+      setPreferenceInput('');
+      trackEvent('preference_added', { total: preferences.length + 1 });
+    }
   }
 
   function addOption() {
     const v = newOptionInput.trim();
-    if (v) { setOptions(prev => [...prev, { name: v, source: 'You added' }]); setNewOptionInput(''); }
+    if (v) {
+      setOptions(prev => [...prev, { name: v, source: 'You added' }]);
+      setNewOptionInput('');
+      trackEvent('option_added', { total: options.length + 1 });
+    }
   }
 
   function updateCriterionWeight(i: number, value: number) {
@@ -155,19 +187,32 @@ export default function DecisionMaker() {
       next[i] = { ...next[i], weight: value };
       return next;
     });
+    // Track that weights were adjusted (criterion index only, not name)
+    trackEvent('criteria_weight_adjusted', {
+      criterion_index: i,
+      new_weight: value,
+      total_weight: criteria.reduce((s, c, idx) => s + (idx === i ? value : c.weight), 0),
+    });
   }
 
   function updateScore(oi: number, ci: number, v: number) {
     setScores(prev => {
       const cur = (prev[oi] ?? {})[ci] ?? 0;
-      return {
+      const next = {
         ...prev,
         [oi]: { ...(prev[oi] ?? {}), [ci]: v === cur ? 0 : v },
       };
+      trackEvent('score_set', {
+        option_index: oi,
+        criterion_index: ci,
+        score: v === cur ? 0 : v,
+      });
+      return next;
     });
   }
 
   function restart() {
+    trackEvent('decision_restarted');
     setStep(1);
     setLoadingStep(0);
   }
@@ -314,6 +359,20 @@ export default function DecisionMaker() {
     width: `${(displayStep / 4) * 100}%`,
     transition: 'width 0.4s ease', borderRadius: '0 2px 2px 0',
   };
+
+  // ── Screen view tracking via React.useEffect ────────────────────────────────
+
+  React.useEffect(() => {
+    const screenMap: Record<number, string> = {
+      1: 'input',
+      3: 'matrix',
+      4: 'scoring',
+      5: 'recommendation',
+    };
+    const name = screenMap[step];
+    if (name) trackEvent('screen_viewed', { screen: name });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -565,7 +624,7 @@ export default function DecisionMaker() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button onClick={() => setStep(4)} style={{ padding: '16px 44px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(45,106,79,0.28)', letterSpacing: '0.01em' }}>
+            <button onClick={() => { trackEvent('scoring_started', { options_count: options.length, criteria_count: criteria.length, weight_valid: weightValid }); setStep(4); }} style={{ padding: '16px 44px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(45,106,79,0.28)', letterSpacing: '0.01em' }}>
               Score My Options
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
@@ -586,7 +645,7 @@ export default function DecisionMaker() {
           </div>
           {buildScoringTable()}
           <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end' }}>
-            <button onClick={() => setStep(5)} style={{ padding: '16px 44px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(45,106,79,0.28)', letterSpacing: '0.01em' }}>
+            <button onClick={() => { trackEvent('recommendation_viewed', { winner_index: winnerIdx, max_score: parseFloat(maxScore.toFixed(1)) }); setStep(5); }} style={{ padding: '16px 44px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(45,106,79,0.28)', letterSpacing: '0.01em' }}>
               See My Recommendation
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
@@ -668,6 +727,7 @@ export default function DecisionMaker() {
             </button>
             <button
               title="Coming soon — save and compare decisions over time"
+              onClick={() => trackEvent('save_clicked')}
               disabled
               style={{ padding: '14px', background: 'none', border: '1.5px solid #E0DBD3', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 500, color: '#6B6B6B', cursor: 'not-allowed', opacity: 0.55, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
