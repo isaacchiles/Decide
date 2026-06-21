@@ -772,7 +772,7 @@ export default function DecisionMaker() {
               onClick={handleSave}
               disabled={saving || !!savedId}
               style={{
-                padding: '14px', border: 'none', borderRadius: '24px',
+                padding: '14px', borderRadius: '24px',
                 fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 600,
                 cursor: saving || savedId ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
