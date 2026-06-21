@@ -57,6 +57,8 @@ export default function DecisionMaker() {
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [winnerImageUrl, setWinnerImageUrl] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
 
   // ── Derived values ──────────────────────────────────────────────────────────
@@ -235,6 +237,8 @@ export default function DecisionMaker() {
     setSavedId(null);
     setSaveError(false);
     setScoringLoading(false);
+    setShareModalOpen(false);
+    setWinnerImageUrl(null);
     setShareCopied(false);
   }
 
@@ -292,29 +296,47 @@ export default function DecisionMaker() {
     setStep(4);
   }
 
-  async function handleShare() {
-    const url = typeof window !== 'undefined' ? window.location.origin : 'https://decidewith.me';
-    const text = `I used Decide to help me ${decision.trim().toLowerCase()}. I went with ${winnerOption?.name} — scored ${maxScore.toFixed(0)} out of 100. Try it free: ${url}`;
+  async function openShareModal() {
+    setShareModalOpen(true);
+    setWinnerImageUrl(null);
+
+    // Fetch a relevant image from Wikipedia (free, no API key, CORS-allowed)
+    const name = winnerOption?.name ?? '';
+    if (name) {
+      try {
+        const encoded = encodeURIComponent(name.replace(/ /g, '_'));
+        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encoded}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.thumbnail?.source) setWinnerImageUrl(data.thumbnail.source);
+        }
+      } catch {
+        // No image — card falls back to gradient only
+      }
+    }
+  }
+
+  async function handleShareAction() {
+    const url = typeof window !== 'undefined' ? window.location.origin : '';
+    const shareText = `I used Decide to help me ${decision.trim().toLowerCase()}. I went with ${winnerOption?.name} — scored ${maxScore.toFixed(0)} out of 100. Try it free: ${url}`;
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ text });
+        await navigator.share({ title: 'My decision on Decide', text: shareText, url });
         trackEvent('decision_shared', { method: 'native' });
+        setShareModalOpen(false);
         return;
       } catch {
-        // User cancelled or share failed — fall through to clipboard
+        // Cancelled — stay in modal
       }
     }
 
-    // Clipboard fallback
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(shareText);
       setShareCopied(true);
       trackEvent('decision_shared', { method: 'clipboard' });
       setTimeout(() => setShareCopied(false), 2500);
-    } catch {
-      // Clipboard also unavailable — silently do nothing
-    }
+    } catch { /* silent */ }
   }
 
   // ── Scoring table (React.createElement to mirror original approach) ─────────
@@ -858,25 +880,14 @@ export default function DecisionMaker() {
             {/* Share button — primary CTA on results */}
             {decision.trim() && (
               <button
-                onClick={handleShare}
-                style={{ padding: '16px', background: shareCopied ? '#1A3C2A' : '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 18px rgba(45,106,79,0.22)', letterSpacing: '0.01em', transition: 'background 0.2s' }}
+                onClick={openShareModal}
+                style={{ padding: '16px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 18px rgba(45,106,79,0.22)', letterSpacing: '0.01em' }}
               >
-                {shareCopied ? (
-                  <>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    Copied to clipboard!
-                  </>
-                ) : (
-                  <>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                    </svg>
-                    Share My Decision
-                  </>
-                )}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                Share My Decision
               </button>
             )}
             <button onClick={restart} style={{ padding: '14px', background: decision.trim() ? 'white' : '#2D6A4F', color: decision.trim() ? '#1A1A1A' : 'white', border: decision.trim() ? '1.5px solid #E0DBD3' : 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: decision.trim() ? 'none' : '0 4px 18px rgba(45,106,79,0.22)', letterSpacing: '0.01em' }}>
@@ -894,6 +905,106 @@ export default function DecisionMaker() {
               </svg>
               View My Decisions
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════ */}
+      {/* SHARE MODAL                                */}
+      {/* ══════════════════════════════════════════ */}
+      {shareModalOpen && (
+        <div
+          onClick={() => setShareModalOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#F9F7F4', borderRadius: '24px 24px 0 0', padding: '12px 20px 36px', width: '100%', maxWidth: '480px', boxShadow: '0 -8px 40px rgba(0,0,0,0.18)' }}
+          >
+            {/* Drag handle */}
+            <div style={{ width: '36px', height: '4px', background: '#D5D0C8', borderRadius: '2px', margin: '0 auto 18px' }} />
+
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: 800, color: '#1A1A1A', margin: 0 }}>Share your decision</h2>
+              <button
+                onClick={() => setShareModalOpen(false)}
+                style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#EEEBE6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B6B6B', fontSize: '18px', fontWeight: 400, lineHeight: 1 }}
+              >×</button>
+            </div>
+
+            {/* Share card — clicking it opens the app URL (preview for recipient) */}
+            <a
+              href={typeof window !== 'undefined' ? window.location.origin : '/'}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'block', borderRadius: '16px', overflow: 'hidden', marginBottom: '18px', textDecoration: 'none', position: 'relative', minHeight: '220px', background: 'linear-gradient(160deg, #1E4D35 0%, #2D6A4F 60%, #3A8463 100%)' }}
+            >
+              {/* Photo (if found) */}
+              {winnerImageUrl && (
+                <img
+                  src={winnerImageUrl}
+                  alt={winnerOption?.name ?? ''}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }}
+                />
+              )}
+
+              {/* Gradient overlay ensures text is always readable */}
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(20,56,36,0.7) 60%, rgba(20,56,36,0.97) 100%)' }} />
+
+              {/* Top bar */}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 0' }}>
+                {/* decide wordmark pill */}
+                <div style={{ background: 'white', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#2D6A4F' }} />
+                  <span style={{ fontFamily: "'Fraunces', serif", fontSize: '14px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.01em' }}>decide</span>
+                </div>
+                {/* Score badge */}
+                <div style={{ background: '#E9C46A', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'baseline', gap: '3px' }}>
+                  <span style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 800, color: '#1A1A1A', lineHeight: 1 }}>{maxScore.toFixed(1)}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#1A1A1A' }}>pts</span>
+                </div>
+              </div>
+
+              {/* Winner text */}
+              <div style={{ position: 'relative', padding: '0 18px 18px', marginTop: '48px' }}>
+                <div style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', fontWeight: 700, marginBottom: '4px', fontFamily: "'DM Sans', sans-serif" }}>MY CHOICE</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: '32px', fontWeight: 800, color: 'white', lineHeight: 1.1 }}>{winnerOption?.name}</div>
+              </div>
+            </a>
+
+            {/* Caption */}
+            <p style={{ fontSize: '15px', color: '#1A1A1A', lineHeight: 1.65, margin: '0 0 4px', fontFamily: "'DM Sans', sans-serif" }}>
+              I weighed every option against what mattered most to me — and <strong>decide</strong> helped me make the call with confidence.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <span style={{ fontSize: '12px', color: '#9B9B9B', letterSpacing: '0.06em', fontFamily: "'DM Sans', sans-serif", textTransform: 'uppercase' }}>decide.app</span>
+              <span style={{ fontSize: '12px', color: '#9B9B9B', fontFamily: "'DM Sans', sans-serif" }}>Weighted decision-making</span>
+            </div>
+
+            {/* Share action */}
+            <button
+              onClick={handleShareAction}
+              style={{ width: '100%', padding: '18px', background: shareCopied ? '#1A3C2A' : '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 18px rgba(45,106,79,0.25)', marginBottom: '12px', transition: 'background 0.15s' } as React.CSSProperties}
+            >
+              {shareCopied ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  Copied to clipboard!
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                  Share via…
+                </>
+              )}
+            </button>
+            <p style={{ fontSize: '13px', color: '#9B9B9B', textAlign: 'center', margin: 0, lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
+              Uses your device&apos;s native share menu.<br />On desktop, copies text to clipboard.
+            </p>
           </div>
         </div>
       )}
