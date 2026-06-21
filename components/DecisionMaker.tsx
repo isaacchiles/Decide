@@ -55,6 +55,7 @@ export default function DecisionMaker() {
   const [scores, setScores] = useState<Scores>(DEMO_SCORES);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState(false);
 
   // ── Derived values ──────────────────────────────────────────────────────────
 
@@ -235,6 +236,7 @@ export default function DecisionMaker() {
   async function handleSave() {
     if (saving || savedId) return;
     setSaving(true);
+    setSaveError(false);
     trackEvent('save_clicked');
 
     const result = await saveDecision({
@@ -247,7 +249,11 @@ export default function DecisionMaker() {
     });
 
     setSaving(false);
-    if (result) setSavedId(result.id);
+    if (result) {
+      setSavedId(result.id);
+    } else {
+      setSaveError(true);
+    }
   }
 
   // ── Scoring table (React.createElement to mirror original approach) ─────────
@@ -776,19 +782,26 @@ export default function DecisionMaker() {
                 fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 600,
                 cursor: saving || savedId ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                background: savedId ? '#E8F5EE' : 'white',
-                color: savedId ? '#2D6A4F' : '#1A1A1A',
-                border: savedId ? '1.5px solid #A8D5BE' : '1.5px solid #E0DBD3',
+                background: savedId ? '#E8F5EE' : saveError ? '#FDEAEA' : 'white',
+                color: savedId ? '#2D6A4F' : saveError ? '#C1121F' : '#1A1A1A',
+                border: savedId ? '1.5px solid #A8D5BE' : saveError ? '1.5px solid #F5A0A0' : '1.5px solid #E0DBD3',
                 opacity: saving ? 0.7 : 1,
                 transition: 'all 0.2s',
               } as React.CSSProperties}
             >
               {savedId ? (
-                <>
+                <span onClick={() => router.push('/history')} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  Decision Saved
+                  Decision Saved — View History
+                </span>
+              ) : saveError ? (
+                <>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  Save failed — tap to retry
                 </>
               ) : (
                 <>
