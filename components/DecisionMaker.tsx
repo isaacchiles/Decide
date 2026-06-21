@@ -313,6 +313,7 @@ export default function DecisionMaker() {
       score:    maxScore.toFixed(0),
       decision: decision.trim(),
     });
+    if (winnerImageUrl) shareParams.set('img', winnerImageUrl);
     const shareUrl  = `${origin}/share?${shareParams.toString()}`;
     const shareText = `I used Decide to help me ${decision.trim().toLowerCase()}. I went with ${winnerOption?.name} — scored ${maxScore.toFixed(0)} out of 100.`;
 

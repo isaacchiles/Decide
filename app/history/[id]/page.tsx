@@ -65,6 +65,7 @@ export default function DecisionDetailPage() {
       score:    decision.winner_score?.toFixed(0) ?? '0',
       decision: decision.title,
     });
+    if (winnerImageUrl) shareParams.set('img', winnerImageUrl);
     const shareUrl  = `${origin}/share?${shareParams.toString()}`;
     const shareText = `I used Decide to help me ${decision.title.toLowerCase()}. I went with ${decision.winner_name} — scored ${decision.winner_score?.toFixed(0)} out of 100.`;
 
