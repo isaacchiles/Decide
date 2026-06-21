@@ -34,11 +34,13 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Redirect unauthenticated users to /auth (except auth routes and API)
+  // Redirect unauthenticated users to /auth (except public routes)
   if (
     !user &&
     !pathname.startsWith('/auth') &&
     !pathname.startsWith('/api') &&
+    !pathname.startsWith('/share') &&
+    !pathname.startsWith('/share-debug') &&
     pathname !== '/_next'
   ) {
     const url = request.nextUrl.clone();
