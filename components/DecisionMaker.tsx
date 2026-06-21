@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
 import { saveDecision } from '@/lib/decisions';
 import { fetchWikipediaImage } from '@/lib/wikipedia';
+import { TEMPLATES, type Template } from '@/lib/templates';
 
 type Criterion = {
   name: string;
@@ -58,6 +59,10 @@ export default function DecisionMaker() {
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
+  const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
+  const [suggestMoreCount, setSuggestMoreCount] = useState(0);
+  const [suggestMoreLoading, setSuggestMoreLoading] = useState(false);
+  const SUGGEST_MORE_LIMIT = 3;
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [winnerImageUrl, setWinnerImageUrl] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
@@ -108,6 +113,38 @@ export default function DecisionMaker() {
   }));
 
   // ── Handlers ────────────────────────────────────────────────────────────────
+
+  async function suggestMoreOptions() {
+    if (suggestMoreCount >= SUGGEST_MORE_LIMIT || suggestMoreLoading) return;
+    setSuggestMoreLoading(true);
+    trackEvent('ai_suggest_more_clicked', { count: suggestMoreCount + 1 });
+    try {
+      const res = await fetch('/api/suggest-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          decision,
+          constraints,
+          preferences,
+          existingOptions: options.map(o => o.name),
+        }),
+      });
+      const data = await res.json();
+      if (Array.isArray(data.options) && data.options.length > 0) {
+        setOptions(prev => [...prev, ...data.options]);
+        setSuggestMoreCount(c => c + 1);
+      }
+    } catch { /* silent */ }
+    setSuggestMoreLoading(false);
+  }
+
+  function applyTemplate(t: Template) {
+    setDecision(t.decision);
+    setConstraints(t.constraints);
+    setPreferences(t.preferences);
+    setActiveTemplate(t.id);
+    trackEvent('template_applied', { template_id: t.id });
+  }
 
   async function startLoading() {
     trackEvent('decision_started', {
@@ -235,6 +272,8 @@ export default function DecisionMaker() {
     setDecision('');
     setConstraints([]);
     setPreferences([]);
+    setActiveTemplate(null);
+    setSuggestMoreCount(0);
     setSavedId(null);
     setSaveError(false);
     setScoringLoading(false);
@@ -552,6 +591,34 @@ export default function DecisionMaker() {
             </p>
           </div>
 
+          {/* Template picker */}
+          <div style={{ marginBottom: '32px' }}>
+            <label style={{ display: 'block', fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6B6B6B', fontWeight: 700, marginBottom: '10px' }}>
+              Start from a template
+            </label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {TEMPLATES.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => applyTemplate(t)}
+                  title={t.description}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '7px 14px', borderRadius: '20px', border: '1.5px solid',
+                    borderColor: activeTemplate === t.id ? '#2D6A4F' : '#E0DBD3',
+                    background: activeTemplate === t.id ? '#E8F5EE' : 'white',
+                    color: activeTemplate === t.id ? '#2D6A4F' : '#1A1A1A',
+                    fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 600,
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  <span>{t.emoji}</span>
+                  <span>{t.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Decision textarea */}
           <div style={{ marginBottom: '36px' }}>
             <label style={{ display: 'block', fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6B6B6B', fontWeight: 700, marginBottom: '8px' }}>
@@ -747,9 +814,19 @@ export default function DecisionMaker() {
                 />
                 <button onClick={addOption} style={{ padding: '10px 18px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '8px', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>+ Add</button>
               </div>
-              <button style={{ width: '100%', padding: '12px', background: 'none', border: '1.5px dashed #A8D5BE', borderRadius: '8px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#52B788', cursor: 'pointer', fontWeight: 500 }}>
-                ✦ Let AI suggest more →
-              </button>
+              {suggestMoreCount < SUGGEST_MORE_LIMIT ? (
+                <button
+                  onClick={suggestMoreOptions}
+                  disabled={suggestMoreLoading}
+                  style={{ width: '100%', padding: '12px', background: 'none', border: '1.5px dashed #A8D5BE', borderRadius: '8px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: suggestMoreLoading ? '#A8D5BE' : '#52B788', cursor: suggestMoreLoading ? 'default' : 'pointer', fontWeight: 500 }}
+                >
+                  {suggestMoreLoading ? 'Finding options…' : `✦ Let AI suggest more → (${SUGGEST_MORE_LIMIT - suggestMoreCount} left)`}
+                </button>
+              ) : (
+                <p style={{ textAlign: 'center', fontSize: '12px', color: '#9B9B9B', margin: '8px 0 0', fontStyle: 'italic' }}>
+                  Max suggestions reached — add your own above.
+                </p>
+              )}
             </div>
           </div>
 
