@@ -23,7 +23,7 @@ export async function GET(request: Request) {
           fontFamily: 'sans-serif',
         }}
       >
-        {/* Background photo (if provided) */}
+        {/* Background photo (if provided) — fills top ~60%, fades into dark green */}
         {imgUrl ? (
           <img
             src={imgUrl}
@@ -31,21 +31,24 @@ export async function GET(request: Request) {
             height="630"
             style={{
               position: 'absolute',
-              inset: 0,
+              top: 0,
+              left: 0,
               width: '100%',
-              height: '100%',
+              height: '75%',
               objectFit: 'cover',
-              opacity: 0.28,
+              opacity: 0.85,
             }}
           />
         ) : null}
 
-        {/* Gradient overlay — always present for text readability */}
+        {/* Gradient overlay — fades photo into dark green panel below */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(20,56,36,0.65) 50%, rgba(20,56,36,0.97) 100%)',
+            background: imgUrl
+              ? 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(20,56,36,0.55) 45%, rgba(20,56,36,0.97) 65%, rgba(20,56,36,1) 100%)'
+              : 'linear-gradient(160deg, #1A3C2A 0%, #2D6A4F 55%, #3A8463 100%)',
             display: 'flex',
           }}
         />

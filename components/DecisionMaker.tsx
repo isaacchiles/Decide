@@ -948,49 +948,51 @@ export default function DecisionMaker() {
               href={typeof window !== 'undefined' ? window.location.origin : '/'}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ display: 'block', borderRadius: '16px', overflow: 'hidden', marginBottom: '18px', textDecoration: 'none', position: 'relative', minHeight: '220px', background: 'linear-gradient(160deg, #1E4D35 0%, #2D6A4F 60%, #3A8463 100%)' }}
+              style={{ display: 'block', borderRadius: '16px', overflow: 'hidden', marginBottom: '18px', textDecoration: 'none' }}
             >
-              {/* Photo (if found) */}
-              {winnerImageUrl && (
-                <img
-                  src={winnerImageUrl}
-                  alt={winnerOption?.name ?? ''}
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }}
-                />
-              )}
+              {/* TOP HALF — photo area */}
+              <div style={{ position: 'relative', height: '170px', background: '#1A3C2A', overflow: 'hidden' }}>
+                {winnerImageUrl ? (
+                  <img
+                    src={winnerImageUrl}
+                    alt={winnerOption?.name ?? ''}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }}
+                  />
+                ) : (
+                  /* Fallback gradient when no photo */
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #1A3C2A 0%, #3A8463 100%)' }} />
+                )}
+                {/* Subtle bottom fade into the dark green panel */}
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '56px', background: 'linear-gradient(to bottom, transparent, #1E4D35)' }} />
 
-              {/* Gradient overlay ensures text is always readable */}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(20,56,36,0.7) 60%, rgba(20,56,36,0.97) 100%)' }} />
-
-              {/* Top bar */}
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 0' }}>
-                {/* decide wordmark pill */}
-                <div style={{ background: 'white', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#2D6A4F' }} />
-                  <span style={{ fontFamily: "'Fraunces', serif", fontSize: '14px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.01em' }}>decide</span>
-                </div>
-                {/* Score badge */}
-                <div style={{ background: '#E9C46A', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'baseline', gap: '3px' }}>
-                  <span style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 800, color: '#1A1A1A', lineHeight: 1 }}>{maxScore.toFixed(1)}</span>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#1A1A1A' }}>pts</span>
+                {/* decide pill + score badge float on top of the photo */}
+                <div style={{ position: 'absolute', top: '12px', left: '12px', right: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ background: 'white', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
+                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#2D6A4F' }} />
+                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: '14px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.01em' }}>decide</span>
+                  </div>
+                  <div style={{ background: '#E9C46A', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'baseline', gap: '3px', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
+                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 800, color: '#1A1A1A', lineHeight: 1 }}>{maxScore.toFixed(1)}</span>
+                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: '11px', fontWeight: 700, color: '#1A1A1A' }}>pts</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Winner text */}
-              <div style={{ position: 'relative', padding: '0 18px 18px', marginTop: '48px' }}>
-                <div style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', fontWeight: 700, marginBottom: '4px', fontFamily: "'DM Sans', sans-serif" }}>MY CHOICE</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: '32px', fontWeight: 800, color: 'white', lineHeight: 1.1 }}>{winnerOption?.name}</div>
+              {/* BOTTOM HALF — winner name + caption on dark green */}
+              <div style={{ background: 'linear-gradient(160deg, #1E4D35 0%, #2D6A4F 100%)', padding: '14px 18px 20px' }}>
+                <div style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginBottom: '4px', fontFamily: "'DM Sans', sans-serif" }}>MY CHOICE</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: 800, color: 'white', lineHeight: 1.1, marginBottom: '14px' }}>{winnerOption?.name}</div>
+                {/* Caption inside the card */}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: '12px' }}>
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.55, margin: '0 0 10px' }}>
+                    I weighed every option against what mattered most to me — and <span style={{ fontWeight: 700, color: 'white' }}>decide</span> helped me make the call with confidence.
+                  </p>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>decide.app · weighted decision-making</span>
+                </div>
               </div>
             </a>
 
-            {/* Caption */}
-            <p style={{ fontSize: '15px', color: '#1A1A1A', lineHeight: 1.65, margin: '0 0 4px', fontFamily: "'DM Sans', sans-serif" }}>
-              I weighed every option against what mattered most to me — and <strong>decide</strong> helped me make the call with confidence.
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <span style={{ fontSize: '12px', color: '#9B9B9B', letterSpacing: '0.06em', fontFamily: "'DM Sans', sans-serif", textTransform: 'uppercase' }}>decide.app</span>
-              <span style={{ fontSize: '12px', color: '#9B9B9B', fontFamily: "'DM Sans', sans-serif" }}>Weighted decision-making</span>
-            </div>
+            <div style={{ marginBottom: '20px' }} />
 
             {/* Share action */}
             <button
