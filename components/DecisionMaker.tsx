@@ -301,14 +301,20 @@ export default function DecisionMaker() {
     setWinnerImageUrl(null);
 
     // Fetch a relevant image from Wikipedia (free, no API key, CORS-allowed)
+    // Use the Action API with redirects=1 so variant names like "Tesla Model Y Long Range"
+    // resolve to the canonical article and return its thumbnail.
     const name = winnerOption?.name ?? '';
     if (name) {
       try {
         const encoded = encodeURIComponent(name.replace(/ /g, '_'));
-        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encoded}`);
+        const res = await fetch(
+          `https://en.wikipedia.org/w/api.php?action=query&titles=${encoded}&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*`
+        );
         if (res.ok) {
           const data = await res.json();
-          if (data.thumbnail?.source) setWinnerImageUrl(data.thumbnail.source);
+          const pages = data?.query?.pages ?? {};
+          const page = Object.values(pages)[0] as { thumbnail?: { source: string } } | undefined;
+          if (page?.thumbnail?.source) setWinnerImageUrl(page.thumbnail.source);
         }
       } catch {
         // No image — card falls back to gradient only

@@ -3,6 +3,10 @@ import Analytics from '@/components/Analytics';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  ),
   title: 'Decide — Make great decisions',
   description: 'A weighted decision matrix powered by AI',
 };
