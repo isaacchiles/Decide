@@ -129,7 +129,10 @@ export default function DecisionMaker() {
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data.criteria)) setCriteria(data.criteria);
-        if (Array.isArray(data.options))  setOptions(data.options);
+        if (Array.isArray(data.options)) {
+          setOptions(data.options);
+          setScores({}); // Reset scores for every fresh decision
+        }
         trackEvent('matrix_generation_succeeded', {
           duration_ms: Date.now() - startTime,
           criteria_count: data.criteria?.length ?? 0,
@@ -215,6 +218,12 @@ export default function DecisionMaker() {
     trackEvent('decision_restarted');
     setStep(1);
     setLoadingStep(0);
+    setCriteria(DEMO_CRITERIA);
+    setOptions(DEMO_OPTIONS);
+    setScores({});
+    setDecision('');
+    setConstraints([]);
+    setPreferences([]);
   }
 
   // ── Scoring table (React.createElement to mirror original approach) ─────────
