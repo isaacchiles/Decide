@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
 import { saveDecision } from '@/lib/decisions';
+import { fetchWikipediaImage } from '@/lib/wikipedia';
 
 type Criterion = {
   name: string;
@@ -300,26 +301,9 @@ export default function DecisionMaker() {
     setShareModalOpen(true);
     setWinnerImageUrl(null);
 
-    // Fetch a relevant image from Wikipedia (free, no API key, CORS-allowed)
-    // Use the Action API with redirects=1 so variant names like "Tesla Model Y Long Range"
-    // resolve to the canonical article and return its thumbnail.
-    const name = winnerOption?.name ?? '';
-    if (name) {
-      try {
-        const encoded = encodeURIComponent(name.replace(/ /g, '_'));
-        const res = await fetch(
-          `https://en.wikipedia.org/w/api.php?action=query&titles=${encoded}&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          const pages = data?.query?.pages ?? {};
-          const page = Object.values(pages)[0] as { thumbnail?: { source: string } } | undefined;
-          if (page?.thumbnail?.source) setWinnerImageUrl(page.thumbnail.source);
-        }
-      } catch {
-        // No image — card falls back to gradient only
-      }
-    }
+    // Fetch a Wikipedia thumbnail — tries exact title first, falls back to OpenSearch
+    const img = await fetchWikipediaImage(winnerOption?.name ?? '');
+    if (img) setWinnerImageUrl(img);
   }
 
   async function handleShareAction() {

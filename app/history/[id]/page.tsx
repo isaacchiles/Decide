@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getDecision, type DecisionRecord } from '@/lib/decisions';
+import { fetchWikipediaImage } from '@/lib/wikipedia';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -52,23 +53,8 @@ export default function DecisionDetailPage() {
     setShareModalOpen(true);
     setWinnerImageUrl(null);
 
-    const name = decision?.winner_name ?? '';
-    if (name) {
-      try {
-        const encoded = encodeURIComponent(name.replace(/ /g, '_'));
-        const res = await fetch(
-          `https://en.wikipedia.org/w/api.php?action=query&titles=${encoded}&prop=pageimages&format=json&pithumbsize=800&redirects=1&origin=*`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          const pages = data?.query?.pages ?? {};
-          const page = Object.values(pages)[0] as { thumbnail?: { source: string } } | undefined;
-          if (page?.thumbnail?.source) setWinnerImageUrl(page.thumbnail.source);
-        }
-      } catch {
-        // No image — card falls back to gradient
-      }
-    }
+    const img = await fetchWikipediaImage(decision?.winner_name ?? '');
+    if (img) setWinnerImageUrl(img);
   }
 
   async function handleShareAction() {
