@@ -26,22 +26,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 1. Exact title
-    const exact = await summaryThumb(q);
-    if (exact) return NextResponse.json({ url: exact });
-
-    // 2. OpenSearch fallback
-    const searchRes = await fetch(
-      `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(q)}&limit=1&namespace=0&format=json`,
-      { next: { revalidate: 3600 } }
-    );
-    if (searchRes.ok) {
-      const data = await searchRes.json();
-      const bestTitle: string | undefined = data?.[1]?.[0];
-      if (bestTitle) {
-        const fallback = await summaryThumb(bestTitle);
-        if (fallback) return NextResponse.json({ url: fallback });
-      }
+    // Try the full title, then progressively drop the last word until we get a thumbnail.
+    // e.g. "Tesla Model Y Long Range" → "Tesla Model Y Long" → "Tesla Model Y" → hit
+    const words = q.trim().split(/\s+/);
+    for (let len = words.length; len >= 1; len--) {
+      const title = words.slice(0, len).join(' ');
+      const url = await summaryThumb(title);
+      if (url) return NextResponse.json({ url });
     }
   } catch (err) {
     console.error('wiki-image error:', err);
