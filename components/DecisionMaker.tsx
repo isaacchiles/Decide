@@ -317,12 +317,21 @@ export default function DecisionMaker() {
   }
 
   async function handleShareAction() {
-    const url = typeof window !== 'undefined' ? window.location.origin : '';
-    const shareText = `I used Decide to help me ${decision.trim().toLowerCase()}. I went with ${winnerOption?.name} — scored ${maxScore.toFixed(0)} out of 100. Try it free: ${url}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
+    // Build the /share URL — OG meta tags on that page generate the rich card preview
+    const shareParams = new URLSearchParams({
+      winner:   winnerOption?.name ?? '',
+      score:    maxScore.toFixed(0),
+      decision: decision.trim(),
+    });
+    if (winnerImageUrl) shareParams.set('img', winnerImageUrl);
+    const shareUrl  = `${origin}/share?${shareParams.toString()}`;
+    const shareText = `I used Decide to help me ${decision.trim().toLowerCase()}. I went with ${winnerOption?.name} — scored ${maxScore.toFixed(0)} out of 100.`;
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: 'My decision on Decide', text: shareText, url });
+        await navigator.share({ title: `I chose ${winnerOption?.name} — Decide`, text: shareText, url: shareUrl });
         trackEvent('decision_shared', { method: 'native' });
         setShareModalOpen(false);
         return;
@@ -331,8 +340,9 @@ export default function DecisionMaker() {
       }
     }
 
+    // Desktop clipboard fallback — include the full URL
     try {
-      await navigator.clipboard.writeText(shareText);
+      await navigator.clipboard.writeText(`${shareText} Try it free: ${shareUrl}`);
       setShareCopied(true);
       trackEvent('decision_shared', { method: 'clipboard' });
       setTimeout(() => setShareCopied(false), 2500);
