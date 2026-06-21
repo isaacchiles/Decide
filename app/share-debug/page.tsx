@@ -1,5 +1,3 @@
-// Diagnostic page — visit /share-debug in production to verify OG config.
-// Safe to leave deployed; returns plain text, no sensitive data.
 import { headers } from 'next/headers';
 
 export default async function ShareDebugPage() {
@@ -8,48 +6,107 @@ export default async function ShareDebugPage() {
   const proto = hdrs.get('x-forwarded-proto') ?? 'https';
   const origin = `${proto}://${host}`;
 
-  const envAppUrl   = process.env.NEXT_PUBLIC_APP_URL   ?? '(not set)';
-  const envVercelUrl = process.env.VERCEL_URL            ?? '(not set)';
-  const envVercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? '(not set)';
-
-  const testWinner   = 'Tesla Model Y';
+  const testWinner   = 'Tesla Model Y Long Range';
   const testScore    = '79';
   const testDecision = 'buying a family car';
 
-  const ogImageRelative = `/api/og?winner=${encodeURIComponent(testWinner)}&score=${testScore}&decision=${encodeURIComponent(testDecision)}`;
-  const ogImageAbsolute = `${origin}${ogImageRelative}`;
+  // ── Test 1: Wikipedia REST API direct (exact title) ──
+  let wikiExactStatus = '';
+  let wikiExactThumb  = '';
+  try {
+    const r = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/Tesla_Model_Y_Long_Range`,
+      { headers: { Accept: 'application/json' }, cache: 'no-store' }
+    );
+    wikiExactStatus = `${r.status} ${r.statusText}`;
+    if (r.ok) {
+      const d = await r.json();
+      wikiExactThumb = d?.thumbnail?.source ?? '(no thumbnail in response)';
+    }
+  } catch (e) {
+    wikiExactStatus = `FETCH ERROR: ${e}`;
+  }
+
+  // ── Test 2: Wikipedia REST API (canonical title) ──
+  let wikiCanonStatus = '';
+  let wikiCanonThumb  = '';
+  try {
+    const r = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/Tesla_Model_Y`,
+      { headers: { Accept: 'application/json' }, cache: 'no-store' }
+    );
+    wikiCanonStatus = `${r.status} ${r.statusText}`;
+    if (r.ok) {
+      const d = await r.json();
+      wikiCanonThumb = d?.thumbnail?.source ?? '(no thumbnail in response)';
+    }
+  } catch (e) {
+    wikiCanonStatus = `FETCH ERROR: ${e}`;
+  }
+
+  // ── Test 3: Wikipedia OpenSearch ──
+  let openSearchStatus = '';
+  let openSearchResult = '';
+  try {
+    const r = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=opensearch&search=Tesla+Model+Y+Long+Range&limit=1&namespace=0&format=json`,
+      { cache: 'no-store' }
+    );
+    openSearchStatus = `${r.status} ${r.statusText}`;
+    if (r.ok) {
+      const d = await r.json();
+      openSearchResult = JSON.stringify(d?.[1]) ?? '(empty)';
+    }
+  } catch (e) {
+    openSearchStatus = `FETCH ERROR: ${e}`;
+  }
+
+  // ── Test 4: Our own /api/wiki-image endpoint ──
+  let apiStatus = '';
+  let apiResult = '';
+  try {
+    const r = await fetch(
+      `${origin}/api/wiki-image?q=${encodeURIComponent(testWinner)}`,
+      { cache: 'no-store' }
+    );
+    apiStatus = `${r.status} ${r.statusText}`;
+    if (r.ok) {
+      const d = await r.json();
+      apiResult = JSON.stringify(d);
+    }
+  } catch (e) {
+    apiStatus = `FETCH ERROR: ${e}`;
+  }
 
   const lines = [
     '=== decide share-debug ===',
+    `Origin: ${origin}`,
     '',
-    '-- Request info --',
-    `Host header:         ${host}`,
-    `Proto header:        ${proto}`,
-    `Inferred origin:     ${origin}`,
+    '── Test 1: Wikipedia REST (exact: Tesla_Model_Y_Long_Range) ──',
+    `Status:    ${wikiExactStatus}`,
+    `Thumbnail: ${wikiExactThumb || '(none)'}`,
     '',
-    '-- Environment variables --',
-    `NEXT_PUBLIC_APP_URL:              ${envAppUrl}`,
-    `VERCEL_URL:                       ${envVercelUrl}`,
-    `VERCEL_PROJECT_PRODUCTION_URL:    ${envVercelProd}`,
+    '── Test 2: Wikipedia REST (canonical: Tesla_Model_Y) ──',
+    `Status:    ${wikiCanonStatus}`,
+    `Thumbnail: ${wikiCanonThumb || '(none)'}`,
     '',
-    '-- What metadataBase resolves to --',
-    `Value used: ${envAppUrl !== '(not set)' ? envAppUrl : envVercelProd !== '(not set)' ? `https://${envVercelProd}` : envVercelUrl !== '(not set)' ? `https://${envVercelUrl}` : 'http://localhost:3000'}`,
+    '── Test 3: Wikipedia OpenSearch ──',
+    `Status:  ${openSearchStatus}`,
+    `Titles:  ${openSearchResult || '(none)'}`,
     '',
-    '-- OG image URL test --',
-    `Relative: ${ogImageRelative}`,
-    `Absolute: ${ogImageAbsolute}`,
+    '── Test 4: /api/wiki-image?q=Tesla+Model+Y+Long+Range ──',
+    `Status:  ${apiStatus}`,
+    `Result:  ${apiResult || '(none)'}`,
     '',
-    `Fetch the absolute URL above in your browser.`,
-    `It should return an image (PNG), not a redirect or error.`,
+    '── OG image (should load in browser) ──',
+    `${origin}/api/og?winner=${encodeURIComponent(testWinner)}&score=${testScore}&decision=${encodeURIComponent(testDecision)}`,
     '',
-    '-- Share page test --',
-    `Visit: ${origin}/share?winner=${encodeURIComponent(testWinner)}&score=${testScore}&decision=${encodeURIComponent(testDecision)}`,
-    `It should return 200 OK with og:image in the <head>.`,
-    `Paste that URL into https://opengraph.xyz to verify.`,
+    '── Share page (paste into opengraph.xyz) ──',
+    `${origin}/share?winner=${encodeURIComponent(testWinner)}&score=${testScore}&decision=${encodeURIComponent(testDecision)}`,
   ].join('\n');
 
   return (
-    <pre style={{ fontFamily: 'monospace', fontSize: '13px', padding: '32px', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+    <pre style={{ fontFamily: 'monospace', fontSize: '13px', padding: '32px', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
       {lines}
     </pre>
   );
