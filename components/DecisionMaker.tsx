@@ -63,11 +63,21 @@ export default function DecisionMaker() {
   const [suggestMoreCount, setSuggestMoreCount] = useState(0);
   const [suggestMoreLoading, setSuggestMoreLoading] = useState(false);
   const SUGGEST_MORE_LIMIT = 3;
+  const [compareMode, setCompareMode] = useState(false);
+  type MatrixResult = { criteria: Criterion[]; options: Option[]; _model: string };
+  const [compareData, setCompareData] = useState<{ sonnet: MatrixResult; haiku: MatrixResult } | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [winnerImageUrl, setWinnerImageUrl] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
 
   // ── Derived values ──────────────────────────────────────────────────────────
+
+  // Detect ?compare=1
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCompareMode(new URLSearchParams(window.location.search).get('compare') === '1');
+    }
+  }, []);
 
   const totalWeight = criteria.reduce((s, c) => s + c.weight, 0);
   const weightValid = totalWeight === 100;
@@ -113,6 +123,19 @@ export default function DecisionMaker() {
   }));
 
   // ── Handlers ────────────────────────────────────────────────────────────────
+
+  function pickCompareResult(which: 'sonnet' | 'haiku') {
+    if (!compareData) return;
+    const picked = compareData[which];
+    setCriteria(picked.criteria);
+    setOptions(picked.options);
+    setScores({});
+    setCompareData(null);
+    trackEvent('matrix_generation_succeeded', {
+      criteria_count: picked.criteria.length,
+      options_count: picked.options.length,
+    });
+  }
 
   async function suggestMoreOptions() {
     if (suggestMoreCount >= SUGGEST_MORE_LIMIT || suggestMoreLoading) return;
@@ -169,35 +192,41 @@ export default function DecisionMaker() {
     setTimeout(() => setLoadingStep(2), 1050);
     setTimeout(() => setLoadingStep(3), 1650);
 
-    const apiFetch = fetch('/api/generate-matrix', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ decision, constraints, preferences }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data.criteria)) setCriteria(data.criteria);
-        if (Array.isArray(data.options)) {
-          setOptions(data.options);
-          setScores({}); // Reset scores for every fresh decision
-        }
-        trackEvent('matrix_generation_succeeded', {
-          duration_ms: Date.now() - startTime,
-          criteria_count: data.criteria?.length ?? 0,
-          options_count: data.options?.length ?? 0,
-        });
-      })
-      .catch(err => {
-        console.error('Matrix generation failed:', err);
-        trackEvent('matrix_generation_failed', {
-          duration_ms: Date.now() - startTime,
-        });
-      });
+    const fetchModel = (model: 'sonnet' | 'haiku') =>
+      fetch('/api/generate-matrix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, constraints, preferences, model }),
+      }).then(r => r.json());
+
+    const apiFetch = compareMode
+      ? Promise.all([fetchModel('sonnet'), fetchModel('haiku')])
+          .then(([sonnetData, haikuData]) => {
+            setCompareData({ sonnet: sonnetData, haiku: haikuData });
+            // Seed the active criteria/options with Sonnet so Screen 3 works after user picks
+            if (Array.isArray(sonnetData.criteria)) setCriteria(sonnetData.criteria);
+            if (Array.isArray(sonnetData.options)) { setOptions(sonnetData.options); setScores({}); }
+          })
+          .catch(err => { console.error('Compare generation failed:', err); })
+      : fetchModel('sonnet')
+          .then(data => {
+            if (Array.isArray(data.criteria)) setCriteria(data.criteria);
+            if (Array.isArray(data.options)) { setOptions(data.options); setScores({}); }
+            trackEvent('matrix_generation_succeeded', {
+              duration_ms: Date.now() - startTime,
+              criteria_count: data.criteria?.length ?? 0,
+              options_count: data.options?.length ?? 0,
+            });
+          })
+          .catch(err => {
+            console.error('Matrix generation failed:', err);
+            trackEvent('matrix_generation_failed', { duration_ms: Date.now() - startTime });
+          });
 
     // Advance to Screen 3 only after BOTH animation and API call finish
     await Promise.all([animationDone, apiFetch]);
     setStep(3);
-    trackEvent('screen_viewed', { screen: 'matrix' });
+    trackEvent('screen_viewed', { screen: compareMode ? 'matrix_compare' : 'matrix' });
   }
 
   function goBack() {
@@ -274,6 +303,7 @@ export default function DecisionMaker() {
     setPreferences([]);
     setActiveTemplate(null);
     setSuggestMoreCount(0);
+    setCompareData(null);
     setSavedId(null);
     setSaveError(false);
     setScoringLoading(false);
@@ -753,6 +783,61 @@ export default function DecisionMaker() {
       {/* ══════════════════════════════════════════ */}
       {step === 3 && (
         <div style={{ maxWidth: '1040px', margin: '0 auto', padding: '48px 24px 88px' }}>
+
+          {/* ── Compare Mode Panel ── */}
+          {compareData && (
+            <div style={{ marginBottom: '40px' }}>
+              <div style={{ marginBottom: '24px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FFF8E1', color: '#B45309', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '4px 12px', borderRadius: '20px', marginBottom: '12px' }}>
+                  🧪 Compare Mode
+                </span>
+                <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 6px', lineHeight: 1.2 }}>Sonnet vs Haiku</h2>
+                <p style={{ fontSize: '14px', color: '#6B6B6B', margin: 0 }}>Both models ran on the same input. Pick the criteria you prefer to continue with.</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '8px' }}>
+                {(['sonnet', 'haiku'] as const).map(model => {
+                  const result = compareData[model];
+                  const label = model === 'sonnet' ? 'Claude Sonnet 4.6' : 'Claude Haiku 4.5';
+                  const accent = model === 'sonnet' ? '#2D6A4F' : '#1D4ED8';
+                  const accentLight = model === 'sonnet' ? '#E8F5EE' : '#EFF6FF';
+                  return (
+                    <div key={model} style={{ background: 'white', borderRadius: '14px', border: `2px solid ${accentLight}`, padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: accent, marginBottom: '2px' }}>{label}</div>
+                          <div style={{ fontSize: '13px', color: '#6B6B6B' }}>{result.criteria.length} criteria generated</div>
+                        </div>
+                        <button
+                          onClick={() => pickCompareResult(model)}
+                          style={{ padding: '9px 20px', background: accent, color: 'white', border: 'none', borderRadius: '20px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          Use this →
+                        </button>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {result.criteria.map((c: Criterion, i: number) => (
+                          <div key={i}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: 600, color: '#1A1A1A' }}>{c.name}</span>
+                              <span style={{ fontSize: '13px', fontWeight: 700, color: accent }}>{c.weight}%</span>
+                            </div>
+                            <div style={{ height: '5px', background: '#F2EFE9', borderRadius: '3px', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', background: accent, borderRadius: '3px', width: `${c.weight}%`, opacity: 0.7 }} />
+                            </div>
+                            <p style={{ fontSize: '11px', color: '#6B6B6B', margin: '4px 0 0', fontStyle: 'italic', lineHeight: 1.4 }}>{c.rationale}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ borderBottom: '1.5px solid #E0DBD3', margin: '32px 0' }} />
+              <p style={{ fontSize: '13px', color: '#9B9B9B', margin: 0 }}>Picking a model loads its criteria into the matrix below — you can still edit weights before scoring.</p>
+            </div>
+          )}
+
           <div style={{ marginBottom: '36px' }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '30px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 8px', lineHeight: 1.15 }}>Your Decision Matrix</h2>
             <p style={{ fontSize: '15px', color: '#6B6B6B', lineHeight: 1.6, margin: 0 }}>Adjust criteria weights to match your real priorities, then manage your options.</p>

@@ -10,7 +10,13 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const { decision, constraints, preferences } = await req.json();
+    const { decision, constraints, preferences, model: modelOverride } = await req.json();
+
+    const ALLOWED_MODELS: Record<string, string> = {
+      sonnet: 'claude-sonnet-4-6',
+      haiku:  'claude-haiku-4-5-20251001',
+    };
+    const model = ALLOWED_MODELS[modelOverride as string] ?? 'claude-sonnet-4-6';
 
     const prompt = `You are a decision-making assistant helping someone make a clear, structured decision.
 
@@ -39,7 +45,7 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
 }`;
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model,
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -69,7 +75,7 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
       source: 'AI suggested',
     }));
 
-    return NextResponse.json(data);
+    return NextResponse.json({ ...data, _model: model });
   } catch (err) {
     console.error('generate-matrix error:', err);
     return NextResponse.json(
