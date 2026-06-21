@@ -32,7 +32,8 @@ export type AnalyticsEvent =
   | 'score_set'                 // user tapped a dot
   | 'recommendation_viewed'     // reached Screen 5
   | 'decision_restarted'        // "Start a New Decision"
-  | 'save_clicked';             // grayed-out save (tracks intent)
+  | 'decision_saved'            // auto-save succeeded
+  | 'ai_scores_applied';        // AI pre-filled the scoring dots
 
 // ── Property types ───────────────────────────────────────────────────────────
 // Only primitives — never strings that could contain user content.

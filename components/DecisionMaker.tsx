@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
 import { saveDecision } from '@/lib/decisions';
@@ -53,6 +53,7 @@ export default function DecisionMaker() {
   const [options, setOptions] = useState<Option[]>(DEMO_OPTIONS);
   const [newOptionInput, setNewOptionInput] = useState('');
   const [scores, setScores] = useState<Scores>(DEMO_SCORES);
+  const [scoringLoading, setScoringLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
@@ -231,13 +232,14 @@ export default function DecisionMaker() {
     setConstraints([]);
     setPreferences([]);
     setSavedId(null);
+    setSaveError(false);
+    setScoringLoading(false);
   }
 
   async function handleSave() {
     if (saving || savedId) return;
     setSaving(true);
     setSaveError(false);
-    trackEvent('save_clicked');
 
     const result = await saveDecision({
       title:       decision.trim() || 'Untitled decision',
@@ -251,9 +253,41 @@ export default function DecisionMaker() {
     setSaving(false);
     if (result) {
       setSavedId(result.id);
+      trackEvent('decision_saved', { winner_score: Math.round(maxScore * 10) / 10 });
     } else {
       setSaveError(true);
     }
+  }
+
+  // Auto-save when reaching the results screen (only for real decisions, not demo)
+  useEffect(() => {
+    if (step === 5 && decision.trim()) {
+      handleSave();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  async function startScoring() {
+    trackEvent('scoring_started', { options_count: options.length, criteria_count: criteria.length, weight_valid: weightValid });
+    setScoringLoading(true);
+
+    try {
+      const res = await fetch('/api/suggest-scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, criteria, options }),
+      });
+      const data = await res.json();
+      if (data.scores && Object.keys(data.scores).length > 0) {
+        setScores(data.scores);
+        trackEvent('ai_scores_applied', { options_count: options.length, criteria_count: criteria.length });
+      }
+    } catch {
+      // Silently proceed — user can score manually
+    }
+
+    setScoringLoading(false);
+    setStep(4);
   }
 
   // ── Scoring table (React.createElement to mirror original approach) ─────────
@@ -673,12 +707,23 @@ export default function DecisionMaker() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button onClick={() => { trackEvent('scoring_started', { options_count: options.length, criteria_count: criteria.length, weight_valid: weightValid }); setStep(4); }} style={{ padding: '16px 44px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(45,106,79,0.28)', letterSpacing: '0.01em' }}>
-              Score My Options
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-              </svg>
-            </button>
+            {scoringLoading ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 32px', background: '#F9F7F4', borderRadius: '24px', border: '1.5px solid #E0DBD3' }}>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#52B788', animation: `pulse 1.4s ease-in-out ${i * 0.22}s infinite` }} />
+                  ))}
+                </div>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '15px', color: '#2D6A4F', fontWeight: 600 }}>AI is scoring your options…</span>
+              </div>
+            ) : (
+              <button onClick={startScoring} style={{ padding: '16px 44px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(45,106,79,0.28)', letterSpacing: '0.01em' }}>
+                Score My Options
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -766,6 +811,21 @@ export default function DecisionMaker() {
             </div>
           </div>
 
+          {/* Save error notice (only shown if auto-save failed) */}
+          {saveError && (
+            <div
+              onClick={handleSave}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 18px', background: '#FDEAEA', border: '1.5px solid #F5A0A0', borderRadius: '10px', marginBottom: '16px', cursor: 'pointer' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C1121F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#C1121F', fontWeight: 500 }}>
+                Couldn&apos;t save — tap to retry
+              </span>
+            </div>
+          )}
+
           {/* Action buttons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button onClick={restart} style={{ padding: '16px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 18px rgba(45,106,79,0.22)', letterSpacing: '0.01em' }}>
@@ -775,43 +835,13 @@ export default function DecisionMaker() {
               Start a New Decision
             </button>
             <button
-              onClick={handleSave}
-              disabled={saving || !!savedId}
-              style={{
-                padding: '14px', borderRadius: '24px',
-                fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 600,
-                cursor: saving || savedId ? 'default' : 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                background: savedId ? '#E8F5EE' : saveError ? '#FDEAEA' : 'white',
-                color: savedId ? '#2D6A4F' : saveError ? '#C1121F' : '#1A1A1A',
-                border: savedId ? '1.5px solid #A8D5BE' : saveError ? '1.5px solid #F5A0A0' : '1.5px solid #E0DBD3',
-                opacity: saving ? 0.7 : 1,
-                transition: 'all 0.2s',
-              } as React.CSSProperties}
+              onClick={() => router.push('/history')}
+              style={{ padding: '14px', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'white', color: '#1A1A1A', border: '1.5px solid #E0DBD3', transition: 'all 0.2s' }}
             >
-              {savedId ? (
-                <span onClick={() => router.push('/history')} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Decision Saved — View History
-                </span>
-              ) : saveError ? (
-                <>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  Save failed — tap to retry
-                </>
-              ) : (
-                <>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                    <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
-                  </svg>
-                  {saving ? 'Saving…' : 'Save This Decision'}
-                </>
-              )}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+              View My Decisions
             </button>
           </div>
         </div>
