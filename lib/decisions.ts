@@ -74,6 +74,26 @@ export async function loadDecisions(): Promise<DecisionRecord[]> {
 }
 
 /**
+ * Load a single decision by ID for the current user.
+ */
+export async function getDecision(id: string): Promise<DecisionRecord | null> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from('decisions')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('getDecision error:', error);
+    return null;
+  }
+
+  return data ?? null;
+}
+
+/**
  * Delete a decision by ID (only works for the current user due to RLS).
  */
 export async function deleteDecision(id: string): Promise<boolean> {

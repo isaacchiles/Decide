@@ -33,7 +33,8 @@ export type AnalyticsEvent =
   | 'recommendation_viewed'     // reached Screen 5
   | 'decision_restarted'        // "Start a New Decision"
   | 'decision_saved'            // auto-save succeeded
-  | 'ai_scores_applied';        // AI pre-filled the scoring dots
+  | 'ai_scores_applied'         // AI pre-filled the scoring dots
+  | 'decision_shared';          // user tapped Share My Decision
 
 // ── Property types ───────────────────────────────────────────────────────────
 // Only primitives — never strings that could contain user content.

@@ -45,7 +45,6 @@ Example format:
 
     const scores = JSON.parse(match[0]);
 
-    // Validate and clamp all values to 1-5
     const validated: Record<string, Record<string, number>> = {};
     for (const oi of Object.keys(scores)) {
       validated[oi] = {};
@@ -58,7 +57,6 @@ Example format:
     return NextResponse.json({ scores: validated });
   } catch (err) {
     console.error('suggest-scores error:', err);
-    // Return empty scores on failure — frontend will just show unscored dots
     return NextResponse.json({ scores: {} });
   }
 }

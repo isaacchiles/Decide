@@ -42,7 +42,6 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
     const text =
       message.content[0].type === 'text' ? message.content[0].text : '';
 
-    // Extract JSON from response (handles edge cases where Claude adds a preamble)
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return NextResponse.json(
@@ -53,7 +52,6 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
 
     const data = JSON.parse(jsonMatch[0]);
 
-    // Validate structure before returning
     if (!Array.isArray(data.criteria) || !Array.isArray(data.options)) {
       return NextResponse.json(
         { error: 'Unexpected AI response structure' },
@@ -61,7 +59,6 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
       );
     }
 
-    // Tag options with source
     data.options = data.options.map((o: { name: string }) => ({
       ...o,
       source: 'AI suggested',

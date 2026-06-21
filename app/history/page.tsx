@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { loadDecisions, deleteDecision, type DecisionRecord } from '@/lib/decisions';
 
@@ -98,27 +99,27 @@ export default function HistoryPage() {
           /* Decision cards */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {decisions.map(d => (
-              <div key={d.id} style={{ background: 'white', borderRadius: '12px', padding: '22px 24px', border: '1px solid #E0DBD3', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '11px', color: '#9B9B9B', margin: '0 0 4px', letterSpacing: '0.03em' }}>{formatDate(d.created_at)}</p>
-                    <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '18px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 10px', lineHeight: 1.3 }}>{d.title}</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '13px', background: '#E8F5EE', color: '#2D6A4F', padding: '3px 10px', borderRadius: '20px', fontWeight: 600 }}>
-                        Winner: {d.winner_name}
-                      </span>
-                      <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
-                        Score {d.winner_score?.toFixed(1)}
-                      </span>
-                      <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
-                        {d.options?.length ?? 0} options · {d.criteria?.length ?? 0} criteria
-                      </span>
-                    </div>
+              <div key={d.id} style={{ background: 'white', borderRadius: '12px', border: '1px solid #E0DBD3', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <Link href={`/history/${d.id}`} style={{ display: 'block', padding: '22px 24px 16px', textDecoration: 'none', color: 'inherit' }}>
+                  <p style={{ fontSize: '11px', color: '#9B9B9B', margin: '0 0 4px', letterSpacing: '0.03em' }}>{formatDate(d.created_at)}</p>
+                  <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '18px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 10px', lineHeight: 1.3 }}>{d.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '13px', background: '#E8F5EE', color: '#2D6A4F', padding: '3px 10px', borderRadius: '20px', fontWeight: 600 }}>
+                      Winner: {d.winner_name}
+                    </span>
+                    <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
+                      Score {d.winner_score?.toFixed(1)}
+                    </span>
+                    <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
+                      {d.options?.length ?? 0} options · {d.criteria?.length ?? 0} criteria
+                    </span>
                   </div>
+                </Link>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 16px 14px' }}>
                   <button
                     onClick={() => handleDelete(d.id)}
                     disabled={deleting === d.id}
-                    style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#C0B8B0', flexShrink: 0, opacity: deleting === d.id ? 0.5 : 1 }}
+                    style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#C0B8B0', opacity: deleting === d.id ? 0.5 : 1 }}
                     title="Delete decision"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

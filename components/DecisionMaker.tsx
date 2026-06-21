@@ -57,6 +57,7 @@ export default function DecisionMaker() {
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // ── Derived values ──────────────────────────────────────────────────────────
 
@@ -234,6 +235,7 @@ export default function DecisionMaker() {
     setSavedId(null);
     setSaveError(false);
     setScoringLoading(false);
+    setShareCopied(false);
   }
 
   async function handleSave() {
@@ -288,6 +290,31 @@ export default function DecisionMaker() {
 
     setScoringLoading(false);
     setStep(4);
+  }
+
+  async function handleShare() {
+    const url = typeof window !== 'undefined' ? window.location.origin : 'https://decidewith.me';
+    const text = `I used Decide to help me ${decision.trim().toLowerCase()}. I went with ${winnerOption?.name} — scored ${maxScore.toFixed(0)} out of 100. Try it free: ${url}`;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ text });
+        trackEvent('decision_shared', { method: 'native' });
+        return;
+      } catch {
+        // User cancelled or share failed — fall through to clipboard
+      }
+    }
+
+    // Clipboard fallback
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareCopied(true);
+      trackEvent('decision_shared', { method: 'clipboard' });
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch {
+      // Clipboard also unavailable — silently do nothing
+    }
   }
 
   // ── Scoring table (React.createElement to mirror original approach) ─────────
@@ -828,7 +855,31 @@ export default function DecisionMaker() {
 
           {/* Action buttons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <button onClick={restart} style={{ padding: '16px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 18px rgba(45,106,79,0.22)', letterSpacing: '0.01em' }}>
+            {/* Share button — primary CTA on results */}
+            {decision.trim() && (
+              <button
+                onClick={handleShare}
+                style={{ padding: '16px', background: shareCopied ? '#1A3C2A' : '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 18px rgba(45,106,79,0.22)', letterSpacing: '0.01em', transition: 'background 0.2s' }}
+              >
+                {shareCopied ? (
+                  <>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Copied to clipboard!
+                  </>
+                ) : (
+                  <>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                    Share My Decision
+                  </>
+                )}
+              </button>
+            )}
+            <button onClick={restart} style={{ padding: '14px', background: decision.trim() ? 'white' : '#2D6A4F', color: decision.trim() ? '#1A1A1A' : 'white', border: decision.trim() ? '1.5px solid #E0DBD3' : 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: decision.trim() ? 'none' : '0 4px 18px rgba(45,106,79,0.22)', letterSpacing: '0.01em' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-3.51" />
               </svg>
