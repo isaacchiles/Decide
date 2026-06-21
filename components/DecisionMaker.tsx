@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
 import { saveDecision } from '@/lib/decisions';
-import { fetchWikipediaImage } from '@/lib/wikipedia';
 
 type Criterion = {
   name: string;
@@ -59,7 +58,6 @@ export default function DecisionMaker() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [winnerImageUrl, setWinnerImageUrl] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
 
   // ── Derived values ──────────────────────────────────────────────────────────
@@ -239,7 +237,6 @@ export default function DecisionMaker() {
     setSaveError(false);
     setScoringLoading(false);
     setShareModalOpen(false);
-    setWinnerImageUrl(null);
     setShareCopied(false);
   }
 
@@ -297,13 +294,8 @@ export default function DecisionMaker() {
     setStep(4);
   }
 
-  async function openShareModal() {
+  function openShareModal() {
     setShareModalOpen(true);
-    setWinnerImageUrl(null);
-
-    // Fetch a Wikipedia thumbnail — tries exact title first, falls back to OpenSearch
-    const img = await fetchWikipediaImage(winnerOption?.name ?? '');
-    if (img) setWinnerImageUrl(img);
   }
 
   async function handleShareAction() {
@@ -315,7 +307,6 @@ export default function DecisionMaker() {
       score:    maxScore.toFixed(0),
       decision: decision.trim(),
     });
-    if (winnerImageUrl) shareParams.set('img', winnerImageUrl);
     const shareUrl  = `${origin}/share?${shareParams.toString()}`;
     const shareText = `I used Decide to help me ${decision.trim().toLowerCase()}. I went with ${winnerOption?.name} — scored ${maxScore.toFixed(0)} out of 100.`;
 
@@ -933,56 +924,14 @@ export default function DecisionMaker() {
               >×</button>
             </div>
 
-            {/* Share card — clicking it opens the app URL (preview for recipient) */}
-            <a
-              href={typeof window !== 'undefined' ? window.location.origin : '/'}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ display: 'block', borderRadius: '16px', overflow: 'hidden', marginBottom: '18px', textDecoration: 'none' }}
-            >
-              {/* TOP HALF — photo area */}
-              <div style={{ position: 'relative', height: '170px', background: '#1A3C2A', overflow: 'hidden' }}>
-                {winnerImageUrl ? (
-                  <img
-                    src={winnerImageUrl}
-                    alt={winnerOption?.name ?? ''}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }}
-                  />
-                ) : (
-                  /* Fallback gradient when no photo */
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #1A3C2A 0%, #3A8463 100%)' }} />
-                )}
-                {/* Subtle bottom fade into the dark green panel */}
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '56px', background: 'linear-gradient(to bottom, transparent, #1E4D35)' }} />
-
-                {/* decide pill + score badge float on top of the photo */}
-                <div style={{ position: 'absolute', top: '12px', left: '12px', right: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ background: 'white', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
-                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#2D6A4F' }} />
-                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: '14px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.01em' }}>decide</span>
-                  </div>
-                  <div style={{ background: '#E9C46A', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'baseline', gap: '3px', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
-                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 800, color: '#1A1A1A', lineHeight: 1 }}>{maxScore.toFixed(1)}</span>
-                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: '11px', fontWeight: 700, color: '#1A1A1A' }}>pts</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* BOTTOM HALF — winner name + caption on dark green */}
-              <div style={{ background: 'linear-gradient(160deg, #1E4D35 0%, #2D6A4F 100%)', padding: '14px 18px 20px' }}>
-                <div style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 700, marginBottom: '4px', fontFamily: "'DM Sans', sans-serif" }}>MY CHOICE</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: 800, color: 'white', lineHeight: 1.1, marginBottom: '14px' }}>{winnerOption?.name}</div>
-                {/* Caption inside the card */}
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: '12px' }}>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.55, margin: '0 0 10px' }}>
-                    I weighed every option against what mattered most to me — and <span style={{ fontWeight: 700, color: 'white' }}>decide</span> helped me make the call with confidence.
-                  </p>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>decide.app · weighted decision-making</span>
-                </div>
-              </div>
-            </a>
-
-            <div style={{ marginBottom: '20px' }} />
+            {/* Share card — shows the exact image that will appear in iMessage/social */}
+            <div style={{ borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', aspectRatio: '1200/630', background: '#1A3C2A' }}>
+              <img
+                src={`/api/og?winner=${encodeURIComponent(winnerOption?.name ?? '')}&score=${encodeURIComponent(maxScore.toFixed(0))}&decision=${encodeURIComponent(decision.trim())}`}
+                alt={`I chose ${winnerOption?.name}`}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
 
             {/* Share action */}
             <button
