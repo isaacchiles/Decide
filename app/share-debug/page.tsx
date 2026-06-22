@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
+import { notFound } from 'next/navigation';
 
 export default async function ShareDebugPage() {
+  if (process.env.NODE_ENV === 'production') notFound();
   const hdrs = await headers();
   const host = hdrs.get('host') ?? 'unknown';
   const proto = hdrs.get('x-forwarded-proto') ?? 'https';

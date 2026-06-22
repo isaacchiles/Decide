@@ -51,7 +51,7 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
     });
 
     const text =
-      message.content[0].type === 'text' ? message.content[0].text : '';
+      message.content[0]?.type === 'text' ? message.content[0].text : '';
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -78,13 +78,11 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
     return NextResponse.json({ ...data, _model: model });
   } catch (err: unknown) {
     console.error('generate-matrix error:', err);
-    // Classify Anthropic API errors so the client can show the right message
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes('credit') || msg.includes('billing') || msg.includes('402')) {
-      return NextResponse.json({ error: 'credits_exhausted' }, { status: 402 });
-    }
-    if (msg.includes('overloaded') || msg.includes('529') || msg.includes('rate')) {
-      return NextResponse.json({ error: 'overloaded' }, { status: 503 });
+    // Use typed Anthropic SDK errors — branch on .status, not message strings
+    if (err instanceof Anthropic.APIError) {
+      if (err.status === 402) return NextResponse.json({ error: 'credits_exhausted' }, { status: 402 });
+      if (err.status === 429) return NextResponse.json({ error: 'overloaded' }, { status: 503 });
+      if (err.status === 529) return NextResponse.json({ error: 'overloaded' }, { status: 503 });
     }
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }

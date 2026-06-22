@@ -37,7 +37,7 @@ Return ONLY valid JSON, no other text:
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const text = message.content[0].type === 'text' ? message.content[0].text : '';
+    const text = message.content[0]?.type === 'text' ? message.content[0].text : '';
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) return NextResponse.json({ options: [] });
 
@@ -48,8 +48,12 @@ Return ONLY valid JSON, no other text:
     }));
 
     return NextResponse.json({ options });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('suggest-options error:', err);
+    if (err instanceof Anthropic.APIError) {
+      if (err.status === 402) return NextResponse.json({ error: 'credits_exhausted', options: [] }, { status: 402 });
+      if (err.status === 429 || err.status === 529) return NextResponse.json({ error: 'overloaded', options: [] }, { status: 503 });
+    }
     return NextResponse.json({ options: [] });
   }
 }

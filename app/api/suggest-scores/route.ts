@@ -44,7 +44,7 @@ Example format:
       ],
     });
 
-    const text = message.content[0].type === 'text' ? message.content[0].text : '';
+    const text = message.content[0]?.type === 'text' ? message.content[0].text : '';
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No JSON in response');
 
@@ -62,12 +62,9 @@ Example format:
     return NextResponse.json({ scores: validated });
   } catch (err: unknown) {
     console.error('suggest-scores error:', err);
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes('credit') || msg.includes('billing') || msg.includes('402')) {
-      return NextResponse.json({ error: 'credits_exhausted', scores: {} }, { status: 402 });
-    }
-    if (msg.includes('overloaded') || msg.includes('529') || msg.includes('rate')) {
-      return NextResponse.json({ error: 'overloaded', scores: {} }, { status: 503 });
+    if (err instanceof Anthropic.APIError) {
+      if (err.status === 402) return NextResponse.json({ error: 'credits_exhausted', scores: {} }, { status: 402 });
+      if (err.status === 429 || err.status === 529) return NextResponse.json({ error: 'overloaded', scores: {} }, { status: 503 });
     }
     return NextResponse.json({ error: 'server_error', scores: {} }, { status: 500 });
   }

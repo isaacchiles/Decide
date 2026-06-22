@@ -56,13 +56,18 @@ export async function saveDecision(params: {
 
 /**
  * Load all decisions for the current user, newest first.
+ * Belt-and-suspenders: .eq('user_id') in addition to RLS policy.
  */
 export async function loadDecisions(): Promise<DecisionRecord[]> {
   const supabase = createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
   const { data, error } = await supabase
     .from('decisions')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -75,14 +80,19 @@ export async function loadDecisions(): Promise<DecisionRecord[]> {
 
 /**
  * Load a single decision by ID for the current user.
+ * Belt-and-suspenders: .eq('user_id') in addition to RLS policy.
  */
 export async function getDecision(id: string): Promise<DecisionRecord | null> {
   const supabase = createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
   const { data, error } = await supabase
     .from('decisions')
     .select('*')
     .eq('id', id)
+    .eq('user_id', user.id)
     .single();
 
   if (error) {
@@ -94,15 +104,20 @@ export async function getDecision(id: string): Promise<DecisionRecord | null> {
 }
 
 /**
- * Delete a decision by ID (only works for the current user due to RLS).
+ * Delete a decision by ID.
+ * Belt-and-suspenders: .eq('user_id') in addition to RLS policy.
  */
 export async function deleteDecision(id: string): Promise<boolean> {
   const supabase = createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
   const { error } = await supabase
     .from('decisions')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   return !error;
 }

@@ -84,9 +84,13 @@ export default function DecisionMaker() {
   const weightValid = totalWeight === 100;
   const displayStep = ({ 1: 1, 3: 2, 4: 3, 5: 4 } as Record<number, number>)[step] || 0;
 
+  // Normalize weights so scores always reflect a true /100 scale,
+  // even if the user has adjusted sliders away from 100.
+  // Formula: (score/5) × (weight / totalWeight) × 100
   function computeOptionScore(oi: number): number {
+    const total = criteria.reduce((s, c) => s + c.weight, 0) || 1;
     return criteria.reduce((sum, c, ci) => {
-      return sum + ((scores[oi] ?? {})[ci] ?? 0) / 5 * c.weight;
+      return sum + ((scores[oi] ?? {})[ci] ?? 0) / 5 * (c.weight / total) * 100;
     }, 0);
   }
 
@@ -98,7 +102,7 @@ export default function DecisionMaker() {
   const rankedOptions = options
     .map((opt, oi) => ({
       ...opt,
-      score: optionScores[oi].toFixed(1),
+      score: optionScores[oi].toFixed(0),
       rawScore: optionScores[oi],
       isWinner: oi === winnerIdx,
     }))
@@ -289,18 +293,22 @@ export default function DecisionMaker() {
   }
 
   function updateScore(oi: number, ci: number, v: number) {
+    // Read current value first so we can compute the toggle outside the updater
     setScores(prev => {
       const cur = (prev[oi] ?? {})[ci] ?? 0;
-      const next = {
+      const newVal = v === cur ? 0 : v;
+      return {
         ...prev,
-        [oi]: { ...(prev[oi] ?? {}), [ci]: v === cur ? 0 : v },
+        [oi]: { ...(prev[oi] ?? {}), [ci]: newVal },
       };
-      trackEvent('score_set', {
-        option_index: oi,
-        criterion_index: ci,
-        score: v === cur ? 0 : v,
-      });
-      return next;
+    });
+    // trackEvent must live outside the updater — updaters must be pure
+    // (React may call them twice in StrictMode / concurrent rendering)
+    const cur = (scores[oi] ?? {})[ci] ?? 0;
+    trackEvent('score_set', {
+      option_index: oi,
+      criterion_index: ci,
+      score: v === cur ? 0 : v,
     });
   }
 
