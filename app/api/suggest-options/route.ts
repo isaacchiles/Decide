@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
+import { checkAndIncrementLimit } from '@/lib/ratelimit';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: Request) {
-  // Auth check
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const rateLimit = await checkAndIncrementLimit(user.id, 'suggest-options');
+  if (!rateLimit.allowed) {
+    return NextResponse.json({ error: 'rate_limited', limit: rateLimit.limit, options: [] }, { status: 429 });
+  }
 
   try {
     const { decision, constraints, preferences, existingOptions } = await req.json();

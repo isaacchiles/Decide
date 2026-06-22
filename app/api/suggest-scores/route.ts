@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkAndIncrementLimit } from '@/lib/ratelimit';
 
 const anthropic = new Anthropic();
 
@@ -8,6 +9,11 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const rateLimit = await checkAndIncrementLimit(user.id, 'suggest-scores');
+  if (!rateLimit.allowed) {
+    return NextResponse.json({ error: 'rate_limited', limit: rateLimit.limit, scores: {} }, { status: 429 });
+  }
 
   try {
     const { decision, criteria, options } = await request.json();

@@ -63,7 +63,7 @@ export default function DecisionMaker() {
   const [suggestMoreCount, setSuggestMoreCount] = useState(0);
   const [suggestMoreLoading, setSuggestMoreLoading] = useState(false);
   const SUGGEST_MORE_LIMIT = 3;
-  const [aiError, setAiError] = useState<'credits_exhausted' | 'overloaded' | 'server_error' | null>(null);
+  const [aiError, setAiError] = useState<'credits_exhausted' | 'overloaded' | 'rate_limited' | 'server_error' | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   type MatrixResult = { criteria: Criterion[]; options: Option[]; _model: string };
   const [compareData, setCompareData] = useState<{ sonnet: MatrixResult; haiku: MatrixResult } | null>(null);
@@ -210,9 +210,16 @@ export default function DecisionMaker() {
     const apiFetch = compareMode
       ? Promise.all([fetchModel('sonnet'), fetchModel('haiku')])
           .then(([sonnetData, haikuData]) => {
-            setCompareData({ sonnet: sonnetData, haiku: haikuData });
-            if (Array.isArray(sonnetData.criteria)) setCriteria(sonnetData.criteria);
-            if (Array.isArray(sonnetData.options)) { setOptions(sonnetData.options); setScores({}); }
+            // If either model returned an error, surface it rather than crashing on .criteria access
+            if (sonnetData.error || haikuData.error) {
+              fetchError = (sonnetData.error ?? haikuData.error) as FetchError;
+              return;
+            }
+            if (Array.isArray(sonnetData.criteria) && Array.isArray(haikuData.criteria)) {
+              setCompareData({ sonnet: sonnetData, haiku: haikuData });
+              setCriteria(sonnetData.criteria);
+              if (Array.isArray(sonnetData.options)) { setOptions(sonnetData.options); setScores({}); }
+            }
           })
           .catch(() => { fetchError = 'server_error'; })
       : fetchModel('sonnet')
@@ -782,13 +789,16 @@ export default function DecisionMaker() {
                 <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 10px' }}>
                   {aiError === 'credits_exhausted' ? 'Out of AI credits' :
                    aiError === 'overloaded'        ? 'AI is overloaded' :
+                   aiError === 'rate_limited'      ? 'Daily limit reached' :
                                                      'Something went wrong'}
                 </h2>
                 <p style={{ fontSize: '14px', color: '#6B6B6B', margin: '0 0 28px', lineHeight: 1.65 }}>
                   {aiError === 'credits_exhausted'
-                    ? 'The app has run out of API credits. Isaac has been notified — try again in a bit.'
+                    ? 'The app has run out of API credits. Try again in a bit.'
                     : aiError === 'overloaded'
                     ? 'Claude is experiencing high demand right now. Wait a moment and try again.'
+                    : aiError === 'rate_limited'
+                    ? 'You\'ve hit the daily limit for AI requests. Come back tomorrow to continue making decisions.'
                     : 'The AI couldn\'t generate your matrix. Please try again.'}
                 </p>
                 <button
