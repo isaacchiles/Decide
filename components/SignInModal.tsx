@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SignInModal() {
@@ -10,6 +11,17 @@ export default function SignInModal() {
   const [error, setError]     = useState('');
 
   const supabase = createClient();
+  const router = useRouter();
+
+  // Dismiss automatically when the magic link resolves in any tab
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        router.refresh(); // re-renders server component → modal unmounts
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

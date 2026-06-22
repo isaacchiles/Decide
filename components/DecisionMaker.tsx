@@ -63,6 +63,7 @@ export default function DecisionMaker() {
   const [suggestMoreCount, setSuggestMoreCount] = useState(0);
   const [suggestMoreLoading, setSuggestMoreLoading] = useState(false);
   const SUGGEST_MORE_LIMIT = 3;
+  const [aiError, setAiError] = useState<'credits_exhausted' | 'overloaded' | 'server_error' | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   type MatrixResult = { criteria: Criterion[]; options: Option[]; _model: string };
   const [compareData, setCompareData] = useState<{ sonnet: MatrixResult; haiku: MatrixResult } | null>(null);
@@ -199,17 +200,24 @@ export default function DecisionMaker() {
         body: JSON.stringify({ decision, constraints, preferences, model }),
       }).then(r => r.json());
 
+    type FetchError = 'credits_exhausted' | 'overloaded' | 'server_error';
+    let fetchError: FetchError | null = null;
+
     const apiFetch = compareMode
       ? Promise.all([fetchModel('sonnet'), fetchModel('haiku')])
           .then(([sonnetData, haikuData]) => {
             setCompareData({ sonnet: sonnetData, haiku: haikuData });
-            // Seed the active criteria/options with Sonnet so Screen 3 works after user picks
             if (Array.isArray(sonnetData.criteria)) setCriteria(sonnetData.criteria);
             if (Array.isArray(sonnetData.options)) { setOptions(sonnetData.options); setScores({}); }
           })
-          .catch(err => { console.error('Compare generation failed:', err); })
+          .catch(() => { fetchError = 'server_error'; })
       : fetchModel('sonnet')
           .then(data => {
+            if (data.error) {
+              fetchError = data.error as FetchError;
+              trackEvent('matrix_generation_failed', { duration_ms: Date.now() - startTime, error: data.error });
+              return;
+            }
             if (Array.isArray(data.criteria)) setCriteria(data.criteria);
             if (Array.isArray(data.options)) { setOptions(data.options); setScores({}); }
             trackEvent('matrix_generation_succeeded', {
@@ -218,15 +226,20 @@ export default function DecisionMaker() {
               options_count: data.options?.length ?? 0,
             });
           })
-          .catch(err => {
-            console.error('Matrix generation failed:', err);
+          .catch(() => {
+            fetchError = 'server_error';
             trackEvent('matrix_generation_failed', { duration_ms: Date.now() - startTime });
           });
 
-    // Advance to Screen 3 only after BOTH animation and API call finish
+    // Wait for both animation and API, then either show error or advance to Screen 3
     await Promise.all([animationDone, apiFetch]);
-    setStep(3);
-    trackEvent('screen_viewed', { screen: compareMode ? 'matrix_compare' : 'matrix' });
+    if (fetchError) {
+      setAiError(fetchError);
+      // Stay on step 2 so the error renders in the loading screen container
+    } else {
+      setStep(3);
+      trackEvent('screen_viewed', { screen: compareMode ? 'matrix_compare' : 'matrix' });
+    }
   }
 
   function goBack() {
@@ -304,6 +317,7 @@ export default function DecisionMaker() {
     setActiveTemplate(null);
     setSuggestMoreCount(0);
     setCompareData(null);
+    setAiError(null);
     setSavedId(null);
     setSaveError(false);
     setScoringLoading(false);
@@ -748,32 +762,66 @@ export default function DecisionMaker() {
       {step === 2 && (
         <div style={{ minHeight: '100vh', background: '#F2EFE9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
           <div style={{ background: 'white', borderRadius: '20px', padding: '52px 44px', maxWidth: '440px', width: '100%', boxShadow: '0 4px 28px rgba(0,0,0,0.07)', textAlign: 'center' }}>
-            <div style={{ display: 'flex', gap: '7px', justifyContent: 'center', marginBottom: '32px' }}>
-              {[0, 1, 2].map(i => (
-                <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#52B788', animation: `pulse 1.4s ease-in-out ${i * 0.22}s infinite` }} />
-              ))}
-            </div>
-            <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '26px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 36px', lineHeight: 1.25 }}>
-              Thinking through your<br />decision...
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
-              {[
-                'Understanding your constraints',
-                'Identifying what matters most',
-                'Designing your criteria weights',
-              ].map((text, i) =>
-                loadingStep >= i + 1 && (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '14px', animation: 'fadeInUp 0.4s ease both' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#E8F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                    <span style={{ fontSize: '15px', color: '#1A1A1A', fontWeight: 500 }}>{text}</span>
-                  </div>
-                ),
-              )}
-            </div>
+
+            {aiError ? (
+              /* ── Error state ── */
+              <>
+                <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                </div>
+                <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 10px' }}>
+                  {aiError === 'credits_exhausted' ? 'Out of AI credits' :
+                   aiError === 'overloaded'        ? 'AI is overloaded' :
+                                                     'Something went wrong'}
+                </h2>
+                <p style={{ fontSize: '14px', color: '#6B6B6B', margin: '0 0 28px', lineHeight: 1.65 }}>
+                  {aiError === 'credits_exhausted'
+                    ? 'The app has run out of API credits. Isaac has been notified — try again in a bit.'
+                    : aiError === 'overloaded'
+                    ? 'Claude is experiencing high demand right now. Wait a moment and try again.'
+                    : 'The AI couldn\'t generate your matrix. Please try again.'}
+                </p>
+                <button
+                  onClick={() => { setAiError(null); setStep(1); }}
+                  style={{ padding: '13px 32px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Try again
+                </button>
+              </>
+            ) : (
+              /* ── Normal loading state ── */
+              <>
+                <div style={{ display: 'flex', gap: '7px', justifyContent: 'center', marginBottom: '32px' }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#52B788', animation: `pulse 1.4s ease-in-out ${i * 0.22}s infinite` }} />
+                  ))}
+                </div>
+                <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '26px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 36px', lineHeight: 1.25 }}>
+                  Thinking through your<br />decision...
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
+                  {[
+                    'Understanding your constraints',
+                    'Identifying what matters most',
+                    'Designing your criteria weights',
+                  ].map((text, i) =>
+                    loadingStep >= i + 1 && (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '14px', animation: 'fadeInUp 0.4s ease both' }}>
+                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#E8F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </div>
+                        <span style={{ fontSize: '15px', color: '#1A1A1A', fontWeight: 500 }}>{text}</span>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </>
+            )}
+
           </div>
         </div>
       )}

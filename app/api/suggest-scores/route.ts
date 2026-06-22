@@ -60,8 +60,15 @@ Example format:
     }
 
     return NextResponse.json({ scores: validated });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('suggest-scores error:', err);
-    return NextResponse.json({ scores: {} });
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('credit') || msg.includes('billing') || msg.includes('402')) {
+      return NextResponse.json({ error: 'credits_exhausted', scores: {} }, { status: 402 });
+    }
+    if (msg.includes('overloaded') || msg.includes('529') || msg.includes('rate')) {
+      return NextResponse.json({ error: 'overloaded', scores: {} }, { status: 503 });
+    }
+    return NextResponse.json({ error: 'server_error', scores: {} }, { status: 500 });
   }
 }

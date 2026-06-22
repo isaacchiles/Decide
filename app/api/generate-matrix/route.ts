@@ -76,11 +76,16 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
     }));
 
     return NextResponse.json({ ...data, _model: model });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('generate-matrix error:', err);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    // Classify Anthropic API errors so the client can show the right message
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('credit') || msg.includes('billing') || msg.includes('402')) {
+      return NextResponse.json({ error: 'credits_exhausted' }, { status: 402 });
+    }
+    if (msg.includes('overloaded') || msg.includes('529') || msg.includes('rate')) {
+      return NextResponse.json({ error: 'overloaded' }, { status: 503 });
+    }
+    return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

@@ -37,7 +37,7 @@ export default function HistoryPage() {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push('/auth');
+    router.push('/');
   }
 
   return (
