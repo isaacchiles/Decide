@@ -28,15 +28,18 @@ Preferences (nice-to-haves): ${preferences?.length ? preferences.join(', ') : 'N
 Generate a decision matrix with:
 1. Exactly 5 weighted criteria that capture what matters most for this specific decision. Weights must be whole numbers that sum to exactly 100.
 2. 2-3 real, specific options the person should evaluate.
+3. A vertical classification for the decision category.
 
 Rules:
 - Criteria names must be concise (1–3 words)
 - Each rationale must be one sentence referencing the user's specific constraints or preferences
 - Options must be real, named choices (not generic placeholders)
 - Weights must be whole numbers summing to exactly 100
+- vertical must be exactly one of: "product" (laptops, electronics, consumer goods), "auto" (cars, trucks, vehicles), "insurance", "credit_card", "loan", "mortgage", "mattress", or "unknown"
 
 Return ONLY valid JSON with no other text, markdown, or explanation:
 {
+  "vertical": "string",
   "criteria": [
     { "name": "string", "weight": number, "rationale": "string" }
   ],

@@ -5,6 +5,8 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getDecision, type DecisionRecord } from '@/lib/decisions';
+import { resolveAffiliate } from '@/lib/affiliate';
+import AffiliateCTA from '@/components/AffiliateCTA';
 import { fetchWikipediaImage } from '@/lib/wikipedia';
 
 function formatDate(iso: string) {
@@ -188,17 +190,30 @@ export default function DecisionDetailPage() {
               <div style={{ fontSize: '10px', letterSpacing: '0.07em', textTransform: 'uppercase', color: '#52B788', fontWeight: 700, marginTop: '2px' }}>Score</div>
             </div>
           </div>
+          {/* Affiliate CTA */}
+          {(() => {
+            const cta = resolveAffiliate({
+              templateId:   null,
+              decisionText: decision.title,
+              winnerName:   decision.winner_name,
+              subId:        decision.id,
+            });
+            return cta ? <AffiliateCTA cta={cta} position="history" /> : null;
+          })()}
+
           {/* Share button */}
-          <button
-            onClick={openShareModal}
-            style={{ width: '100%', padding: '13px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '20px', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', boxShadow: '0 3px 12px rgba(45,106,79,0.22)' }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-            </svg>
-            Share This Decision
-          </button>
+          <div style={{ marginTop: '12px' }}>
+            <button
+              onClick={openShareModal}
+              style={{ width: '100%', padding: '13px', background: 'white', color: '#2D6A4F', border: '1.5px solid #52B788', borderRadius: '20px', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+              Share This Decision
+            </button>
+          </div>
         </div>
 
         {/* All options ranked */}

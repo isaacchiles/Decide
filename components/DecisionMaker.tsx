@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
 import { saveDraft, saveDecision, getDecision } from '@/lib/decisions';
+import { resolveAffiliate } from '@/lib/affiliate';
+import AffiliateCTA from '@/components/AffiliateCTA';
 import { fetchWikipediaImage } from '@/lib/wikipedia';
 import { TEMPLATES, type Template } from '@/lib/templates';
 
@@ -71,6 +73,7 @@ export default function DecisionMaker() {
   const [suggestMoreLoading, setSuggestMoreLoading] = useState(false);
   const SUGGEST_MORE_LIMIT = 3;
   const [aiError, setAiError] = useState<'credits_exhausted' | 'overloaded' | 'rate_limited' | 'server_error' | null>(null);
+  const [aiVertical, setAiVertical] = useState<string | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [winnerImageUrl, setWinnerImageUrl] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
@@ -229,6 +232,7 @@ export default function DecisionMaker() {
         }
         if (Array.isArray(data.criteria)) setCriteria(data.criteria);
         if (Array.isArray(data.options)) { setOptions(data.options); setScores({}); }
+        if (typeof data.vertical === 'string') setAiVertical(data.vertical);
         trackEvent('matrix_generation_succeeded', {
           decision_id:    id,
           duration_ms:    Date.now() - startTime,
@@ -332,6 +336,7 @@ export default function DecisionMaker() {
     setActiveTemplate(null);
     setSuggestMoreCount(0);
     setAiError(null);
+    setAiVertical(null);
     setSavedId(null);
     setSaveError(false);
     setScoringLoading(false);
@@ -1040,6 +1045,18 @@ export default function DecisionMaker() {
               ))}
             </div>
           </div>
+
+          {/* Affiliate CTA — shown when a partner is configured for this vertical */}
+          {(() => {
+            const cta = resolveAffiliate({
+              templateId:   activeTemplate,
+              decisionText: decision,
+              winnerName:   winnerOption?.name ?? '',
+              subId:        decisionId.current,
+              aiVertical,
+            });
+            return cta ? <AffiliateCTA cta={cta} position="results_primary" /> : null;
+          })()}
 
           {/* Save error notice (only shown if auto-save failed) */}
           {saveError && (

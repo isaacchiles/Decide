@@ -35,7 +35,8 @@ export type AnalyticsEvent =
   | 'decision_saved'            // auto-save succeeded
   | 'ai_scores_applied'         // AI pre-filled the scoring dots
   | 'decision_shared'           // user tapped Share My Decision
-  | 'template_applied';         // user selected a template on Screen 1
+  | 'template_applied'          // user selected a template on Screen 1
+  | 'affiliate_click';          // user clicked an affiliate CTA (vertical, partner, position)
 
 // ── Property types ───────────────────────────────────────────────────────────
 // Only primitives — never strings that could contain user content.
