@@ -16,13 +16,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { decision, constraints, preferences, model: modelOverride } = await req.json();
-
-    const ALLOWED_MODELS: Record<string, string> = {
-      sonnet: 'claude-sonnet-4-6',
-      haiku:  'claude-haiku-4-5-20251001',
-    };
-    const model = ALLOWED_MODELS[modelOverride as string] ?? 'claude-sonnet-4-6';
+    const { decision, constraints, preferences } = await req.json();
+    const model = 'claude-sonnet-4-6';
 
     const prompt = `You are a decision-making assistant helping someone make a clear, structured decision.
 
@@ -81,7 +76,7 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
       source: 'AI suggested',
     }));
 
-    return NextResponse.json({ ...data, _model: model });
+    return NextResponse.json(data);
   } catch (err: unknown) {
     console.error('generate-matrix error:', err);
     // Use typed Anthropic SDK errors — branch on .status, not message strings
