@@ -40,6 +40,9 @@ export default function HistoryPage() {
     router.push('/');
   }
 
+  const drafts    = decisions.filter(d => d.status === 'draft');
+  const completed = decisions.filter(d => d.status !== 'draft');
+
   return (
     <div style={{ minHeight: '100vh', background: '#F9F7F4', fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`}</style>
@@ -96,39 +99,108 @@ export default function HistoryPage() {
             </button>
           </div>
         ) : (
-          /* Decision cards */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {decisions.map(d => (
-              <div key={d.id} style={{ background: 'white', borderRadius: '12px', border: '1px solid #E0DBD3', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                <Link href={`/history/${d.id}`} style={{ display: 'block', padding: '22px 24px 16px', textDecoration: 'none', color: 'inherit' }}>
-                  <p style={{ fontSize: '11px', color: '#9B9B9B', margin: '0 0 4px', letterSpacing: '0.03em' }}>{formatDate(d.created_at)}</p>
-                  <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '18px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 10px', lineHeight: 1.3 }}>{d.title}</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '13px', background: '#E8F5EE', color: '#2D6A4F', padding: '3px 10px', borderRadius: '20px', fontWeight: 600 }}>
-                      Winner: {d.winner_name}
-                    </span>
-                    <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
-                      Score {d.winner_score?.toFixed(1)}
-                    </span>
-                    <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
-                      {d.options?.length ?? 0} options · {d.criteria?.length ?? 0} criteria
-                    </span>
-                  </div>
-                </Link>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 16px 14px' }}>
-                  <button
-                    onClick={() => handleDelete(d.id)}
-                    disabled={deleting === d.id}
-                    style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#C0B8B0', opacity: deleting === d.id ? 0.5 : 1 }}
-                    title="Delete decision"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
-                    </svg>
-                  </button>
+          <div>
+            {/* ── In-progress drafts ── */}
+            {drafts.length > 0 && (
+              <div style={{ marginBottom: '40px' }}>
+                <h2 style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B6B6B', fontWeight: 700, margin: '0 0 14px' }}>In Progress</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {drafts.map(d => (
+                    <div key={d.id} style={{ background: 'white', borderRadius: '12px', border: '1.5px solid #F0D98A', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                      <div style={{ padding: '18px 22px 14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: '11px', color: '#9B9B9B', margin: '0 0 4px', letterSpacing: '0.03em' }}>{formatDate(d.created_at)}</p>
+                            <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 700, color: '#1A1A1A', margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {d.title || 'Untitled decision'}
+                            </h3>
+                          </div>
+                          <span style={{ fontSize: '11px', background: '#FEF8E8', color: '#8B6914', padding: '3px 10px', borderRadius: '20px', fontWeight: 700, letterSpacing: '0.04em', whiteSpace: 'nowrap', flexShrink: 0, border: '1px solid #F0D98A' }}>
+                            In Progress
+                          </span>
+                        </div>
+                        {/* Constraints / preferences preview */}
+                        {((d.constraints ?? []).length > 0 || (d.preferences ?? []).length > 0) && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+                            {(d.constraints ?? []).slice(0, 3).map((c, i) => (
+                              <span key={i} style={{ fontSize: '11px', background: '#E8F5EE', color: '#2D6A4F', padding: '2px 8px', borderRadius: '20px', fontWeight: 500 }}>{c}</span>
+                            ))}
+                            {(d.preferences ?? []).slice(0, 2).map((p, i) => (
+                              <span key={i} style={{ fontSize: '11px', background: '#FEF8E8', color: '#8B6914', padding: '2px 8px', borderRadius: '20px', fontWeight: 500 }}>{p}</span>
+                            ))}
+                            {((d.constraints ?? []).length + (d.preferences ?? []).length) > 5 && (
+                              <span style={{ fontSize: '11px', color: '#9B9B9B', padding: '2px 4px' }}>
+                                +{(d.constraints ?? []).length + (d.preferences ?? []).length - 5} more
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <button
+                            onClick={() => router.push(`/?resume=${d.id}`)}
+                            style={{ padding: '9px 22px', background: '#E9C46A', color: '#1A1A1A', border: 'none', borderRadius: '20px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                          >
+                            Resume →
+                          </button>
+                          <button
+                            onClick={() => handleDelete(d.id)}
+                            disabled={deleting === d.id}
+                            style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#C0B8B0', opacity: deleting === d.id ? 0.5 : 1 }}
+                            title="Delete draft"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* ── Completed decisions ── */}
+            {completed.length > 0 && (
+              <div>
+                {drafts.length > 0 && (
+                  <h2 style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B6B6B', fontWeight: 700, margin: '0 0 14px' }}>Completed</h2>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {completed.map(d => (
+                    <div key={d.id} style={{ background: 'white', borderRadius: '12px', border: '1px solid #E0DBD3', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                      <Link href={`/history/${d.id}`} style={{ display: 'block', padding: '22px 24px 16px', textDecoration: 'none', color: 'inherit' }}>
+                        <p style={{ fontSize: '11px', color: '#9B9B9B', margin: '0 0 4px', letterSpacing: '0.03em' }}>{formatDate(d.created_at)}</p>
+                        <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '18px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 10px', lineHeight: 1.3 }}>{d.title}</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '13px', background: '#E8F5EE', color: '#2D6A4F', padding: '3px 10px', borderRadius: '20px', fontWeight: 600 }}>
+                            Winner: {d.winner_name}
+                          </span>
+                          <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
+                            Score {d.winner_score?.toFixed(1)}
+                          </span>
+                          <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
+                            {d.options?.length ?? 0} options · {d.criteria?.length ?? 0} criteria
+                          </span>
+                        </div>
+                      </Link>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 16px 14px' }}>
+                        <button
+                          onClick={() => handleDelete(d.id)}
+                          disabled={deleting === d.id}
+                          style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#C0B8B0', opacity: deleting === d.id ? 0.5 : 1 }}
+                          title="Delete decision"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

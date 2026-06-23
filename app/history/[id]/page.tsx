@@ -114,6 +114,41 @@ export default function DecisionDetailPage() {
     );
   }
 
+  // Draft guard — this decision was started but not completed.
+  if (decision.status === 'draft') {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F9F7F4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif", padding: '24px' }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`}</style>
+        <div style={{ background: 'white', borderRadius: '16px', border: '1.5px solid #F0D98A', padding: '36px 32px', maxWidth: '420px', width: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', textAlign: 'center' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#FEF8E8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E9C46A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 10px' }}>Decision in progress</h2>
+          <p style={{ fontSize: '14px', color: '#6B6B6B', margin: '0 0 8px', lineHeight: 1.6 }}>
+            <strong style={{ color: '#1A1A1A' }}>{decision.title || 'Untitled decision'}</strong>
+          </p>
+          <p style={{ fontSize: '14px', color: '#6B6B6B', margin: '0 0 28px', lineHeight: 1.6 }}>
+            You started this but haven&apos;t finished yet. Pick up where you left off.
+          </p>
+          <button
+            onClick={() => router.push(`/?resume=${decision.id}`)}
+            style={{ width: '100%', padding: '14px', background: '#E9C46A', color: '#1A1A1A', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer', marginBottom: '12px' }}
+          >
+            Resume this decision →
+          </button>
+          <button
+            onClick={() => router.push('/history')}
+            style={{ width: '100%', padding: '12px', background: 'none', border: '1.5px solid #E0DBD3', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#6B6B6B', cursor: 'pointer' }}
+          >
+            Back to My Decisions
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#F9F7F4', fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`

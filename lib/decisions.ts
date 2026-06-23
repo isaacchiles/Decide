@@ -1,8 +1,14 @@
 import { createClient } from '@/lib/supabase/client';
 
+export type DecisionStatus = 'draft' | 'complete';
+
 export type DecisionRecord = {
   id: string;
+  status: DecisionStatus;
+  step: number;
   title: string;
+  constraints: string[] | null;
+  preferences: string[] | null;
   criteria: { name: string; weight: number; rationale: string }[];
   options: { name: string; source: string }[];
   scores: Record<string, Record<string, number>>;
@@ -13,11 +19,55 @@ export type DecisionRecord = {
 };
 
 /**
- * Save a completed decision to Supabase.
- * Only behavioral metadata is stored — title is the only user-text field,
- * kept for the user's own reference in their history.
+ * Save a decision draft when the user clicks "Build My Decision Matrix".
+ * Uses the pre-generated decision ID so the later complete-save can upsert
+ * cleanly into the same row.
+ */
+export async function saveDraft(params: {
+  id: string;
+  title: string;
+  constraints: string[];
+  preferences: string[];
+}): Promise<boolean> {
+  const supabase = createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { error } = await supabase
+    .from('decisions')
+    .upsert(
+      {
+        id:                params.id,
+        user_id:           user.id,
+        title:             params.title.trim() || 'Untitled decision',
+        status:            'draft',
+        step:              1,
+        constraints:       params.constraints,
+        preferences:       params.preferences,
+        criteria:          [],
+        options:           [],
+        scores:            {},
+        winner_name:       '',
+        winner_score:      0,
+        share_anonymously: false,
+      },
+      { onConflict: 'id' }
+    );
+
+  if (error) {
+    console.error('saveDraft error:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Save a completed decision. Takes the pre-generated draft ID and upserts
+ * the full record — the draft row (if it exists) becomes the complete decision.
  */
 export async function saveDecision(params: {
+  id: string;
   title: string;
   criteria: DecisionRecord['criteria'];
   options: DecisionRecord['options'];
@@ -25,33 +75,36 @@ export async function saveDecision(params: {
   winner_name: string;
   winner_score: number;
   share_anonymously?: boolean;
-}): Promise<{ id: string } | null> {
+}): Promise<boolean> {
   const supabase = createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) return false;
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('decisions')
-    .insert({
-      user_id:           user.id,
-      title:             params.title,
-      criteria:          params.criteria,
-      options:           params.options,
-      scores:            params.scores,
-      winner_name:       params.winner_name,
-      winner_score:      params.winner_score,
-      share_anonymously: params.share_anonymously ?? false,
-    })
-    .select('id')
-    .single();
+    .upsert(
+      {
+        id:                params.id,
+        user_id:           user.id,
+        title:             params.title,
+        status:            'complete',
+        step:              5,
+        criteria:          params.criteria,
+        options:           params.options,
+        scores:            params.scores,
+        winner_name:       params.winner_name,
+        winner_score:      params.winner_score,
+        share_anonymously: params.share_anonymously ?? false,
+      },
+      { onConflict: 'id' }
+    );
 
   if (error) {
     console.error('saveDecision error:', error);
-    return null;
+    return false;
   }
-
-  return { id: data.id };
+  return true;
 }
 
 /**

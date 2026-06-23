@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
-import { saveDecision } from '@/lib/decisions';
+import { saveDraft, saveDecision, getDecision } from '@/lib/decisions';
 import { fetchWikipediaImage } from '@/lib/wikipedia';
 import { TEMPLATES, type Template } from '@/lib/templates';
 
@@ -40,6 +40,13 @@ const DEMO_SCORES: Scores = {
 
 export default function DecisionMaker() {
   const router = useRouter();
+
+  // Stable decision ID generated once per decision lifecycle.
+  // Lives in a ref so it doesn't trigger re-renders and is immune to
+  // async timing (no stale closure issues when used inside callbacks).
+  // Reset to a fresh UUID in restart().
+  const decisionId = useRef<string>(crypto.randomUUID());
+
   const [step, setStep] = useState(1);
   const [decision, setDecision] = useState('');
   const [constraints, setConstraints] = useState<string[]>([
@@ -69,6 +76,27 @@ export default function DecisionMaker() {
   const [shareCopied, setShareCopied] = useState(false);
 
   // ── Derived values ──────────────────────────────────────────────────────────
+
+  // Resume flow: if ?resume=<id> is in the URL, load that draft and
+  // pre-populate the form. Reuse the same decision ID so subsequent
+  // saves overwrite the draft row rather than creating a duplicate.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const resumeId = new URLSearchParams(window.location.search).get('resume');
+    if (!resumeId) return;
+
+    getDecision(resumeId).then(saved => {
+      if (!saved || saved.status !== 'draft') return;
+      decisionId.current = saved.id;
+      setDecision(saved.title ?? '');
+      setConstraints(saved.constraints ?? []);
+      setPreferences(saved.preferences ?? []);
+      setSavedId(saved.id);
+      // Remove the ?resume param without a navigation so the URL is clean
+      window.history.replaceState({}, '', '/');
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const totalWeight = criteria.reduce((s, c) => s + c.weight, 0);
   const weightValid = totalWeight === 100;
@@ -152,17 +180,27 @@ export default function DecisionMaker() {
   }
 
   async function startLoading() {
+    const id = decisionId.current;
+
     trackEvent('decision_started', {
+      decision_id:       id,
       has_decision_text: decision.trim().length > 0,
-      constraint_count: constraints.length,
-      preference_count: preferences.length,
+      constraint_count:  constraints.length,
+      preference_count:  preferences.length,
+    });
+
+    // Save draft immediately — before the API call — so if the user
+    // closes the tab mid-flow their input (text, constraints, preferences)
+    // is preserved. This also anchors the decision_id for all future events.
+    saveDraft({ id, title: decision, constraints, preferences }).then(ok => {
+      if (ok) setSavedId(id);
     });
 
     setStep(2);
     setLoadingStep(0);
 
     trackEvent('screen_viewed', { screen: 'loading' });
-    trackEvent('matrix_generation_started');
+    trackEvent('matrix_generation_started', { decision_id: id });
 
     const startTime = Date.now();
 
@@ -186,20 +224,21 @@ export default function DecisionMaker() {
       .then(data => {
         if (data.error) {
           fetchError = data.error as FetchError;
-          trackEvent('matrix_generation_failed', { duration_ms: Date.now() - startTime, error: data.error });
+          trackEvent('matrix_generation_failed', { decision_id: id, duration_ms: Date.now() - startTime, error: data.error });
           return;
         }
         if (Array.isArray(data.criteria)) setCriteria(data.criteria);
         if (Array.isArray(data.options)) { setOptions(data.options); setScores({}); }
         trackEvent('matrix_generation_succeeded', {
-          duration_ms: Date.now() - startTime,
+          decision_id:    id,
+          duration_ms:    Date.now() - startTime,
           criteria_count: data.criteria?.length ?? 0,
-          options_count: data.options?.length ?? 0,
+          options_count:  data.options?.length ?? 0,
         });
       })
       .catch(() => {
         fetchError = 'server_error';
-        trackEvent('matrix_generation_failed', { duration_ms: Date.now() - startTime });
+        trackEvent('matrix_generation_failed', { decision_id: id, duration_ms: Date.now() - startTime });
       });
 
     // Wait for both animation and API, then either show error or advance to Screen 3
@@ -281,6 +320,7 @@ export default function DecisionMaker() {
 
   function restart() {
     trackEvent('decision_restarted');
+    decisionId.current = crypto.randomUUID(); // fresh ID for the next decision
     setStep(1);
     setLoadingStep(0);
     setCriteria(DEMO_CRITERIA);
@@ -301,12 +341,13 @@ export default function DecisionMaker() {
   }
 
   async function handleSave() {
-    if (saving || savedId) return;
+    if (saving) return;
     setSaving(true);
     setSaveError(false);
 
-    const result = await saveDecision({
-      title:       decision.trim() || 'Untitled decision',
+    const ok = await saveDecision({
+      id:           decisionId.current,
+      title:        decision.trim() || 'Untitled decision',
       criteria,
       options,
       scores,
@@ -315,9 +356,12 @@ export default function DecisionMaker() {
     });
 
     setSaving(false);
-    if (result) {
-      setSavedId(result.id);
-      trackEvent('decision_saved', { winner_score: Math.round(maxScore * 10) / 10 });
+    if (ok) {
+      setSavedId(decisionId.current);
+      trackEvent('decision_saved', {
+        decision_id:  decisionId.current,
+        winner_score: Math.round(maxScore * 10) / 10,
+      });
     } else {
       setSaveError(true);
     }
@@ -332,7 +376,7 @@ export default function DecisionMaker() {
   }, [step]);
 
   async function startScoring() {
-    trackEvent('scoring_started', { options_count: options.length, criteria_count: criteria.length, weight_valid: weightValid });
+    trackEvent('scoring_started', { decision_id: decisionId.current, options_count: options.length, criteria_count: criteria.length, weight_valid: weightValid });
     setScoringLoading(true);
 
     try {
@@ -925,7 +969,7 @@ export default function DecisionMaker() {
           </div>
           {buildScoringTable()}
           <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end' }}>
-            <button onClick={() => { trackEvent('recommendation_viewed', { winner_index: winnerIdx, max_score: parseFloat(maxScore.toFixed(1)) }); setStep(5); }} style={{ padding: '16px 44px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(45,106,79,0.28)', letterSpacing: '0.01em' }}>
+            <button onClick={() => { trackEvent('recommendation_viewed', { decision_id: decisionId.current, winner_index: winnerIdx, max_score: parseFloat(maxScore.toFixed(1)) }); setStep(5); }} style={{ padding: '16px 44px', background: '#2D6A4F', color: 'white', border: 'none', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(45,106,79,0.28)', letterSpacing: '0.01em' }}>
               See My Recommendation
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
