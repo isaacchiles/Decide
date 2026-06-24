@@ -54,10 +54,10 @@ export default function SignInModal() {
           animation: 'modalIn 0.22s ease both',
         }}>
 
-          {/* decide wordmark */}
+          {/* Ask Hoot wordmark */}
           <div style={{ marginBottom: '8px' }}>
             <span style={{ fontFamily: "'Fraunces', serif", fontSize: '26px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>
-              decide
+              Ask Hoot
             </span>
           </div>
 

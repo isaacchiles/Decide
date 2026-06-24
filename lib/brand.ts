@@ -7,7 +7,10 @@
 
 export const BRAND = {
   /** Display name — shown in headers, share cards, OG titles */
-  name: 'decide',
+  name: 'Ask Hoot',
+
+  /** Production domain (no trailing slash) */
+  domain: 'askhoot.ai',
 
   /** One-line tagline used in OG descriptions and the landing hero */
   tagline: 'Make great decisions',

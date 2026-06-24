@@ -86,7 +86,7 @@ export async function GET(request: Request) {
               }}
             />
             <span style={{ fontSize: '24px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>
-              decide
+              Ask Hoot
             </span>
           </div>
 
@@ -169,7 +169,7 @@ export async function GET(request: Request) {
             }}
           >
             <span style={{ fontSize: '16px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              decide.app
+              askhoot.ai
             </span>
             <span style={{ fontSize: '16px', color: 'rgba(255,255,255,0.4)' }}>
               Weighted decision-making

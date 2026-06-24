@@ -42,7 +42,7 @@ const PARTNERS: Partial<Record<Vertical, PartnerConfig>> = {
     partnerId: 'amazon',
     label: 'Check price on Amazon',
     buildUrl: (winnerName, _subId) => {
-      const tag = process.env.NEXT_PUBLIC_AMAZON_ASSOC_TAG ?? 'decide-20';
+      const tag = process.env.NEXT_PUBLIC_AMAZON_ASSOC_TAG ?? 'askhoot-20';
       return `https://www.amazon.com/s?k=${encodeURIComponent(winnerName)}&tag=${tag}`;
     },
   },

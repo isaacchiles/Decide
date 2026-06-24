@@ -54,7 +54,7 @@ export default function AuthPage() {
           <span style={{
             fontFamily: "'Fraunces', serif", fontSize: '28px',
             fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em',
-          }}>decide</span>
+          }}>Ask Hoot</span>
         </div>
 
         {sent ? (

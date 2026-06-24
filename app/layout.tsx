@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL ??
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
   ),
-  title: 'Decide — Make great decisions',
+  title: 'Ask Hoot — Make great decisions',
   description: 'A weighted decision matrix powered by AI',
 };
 

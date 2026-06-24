@@ -704,7 +704,7 @@ export default function DecisionMaker() {
                 title="Back to start"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
-                <span style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 700, color: '#2D6A4F', letterSpacing: '-0.02em' }}>decide</span>
+                <span style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 700, color: '#2D6A4F', letterSpacing: '-0.02em' }}>Ask Hoot</span>
               </button>
             </div>
           </div>
@@ -1237,7 +1237,7 @@ export default function DecisionMaker() {
                 <div style={{ position: 'absolute', top: '12px', left: '12px', right: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ background: 'white', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
                     <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#2D6A4F' }} />
-                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: '14px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.01em' }}>decide</span>
+                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: '14px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.01em' }}>Ask Hoot</span>
                   </div>
                   <div style={{ background: '#E9C46A', borderRadius: '20px', padding: '5px 12px', display: 'flex', alignItems: 'baseline', gap: '3px', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
                     <span style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 800, color: '#1A1A1A', lineHeight: 1 }}>{maxScore.toFixed(1)}</span>
@@ -1251,9 +1251,9 @@ export default function DecisionMaker() {
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: 800, color: 'white', lineHeight: 1.1, marginBottom: '14px' }}>{winnerOption?.name}</div>
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: '12px' }}>
                   <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.55, margin: '0 0 10px' }}>
-                    I weighed every option against what mattered most to me — and <span style={{ fontWeight: 700, color: 'white' }}>decide</span> helped me make the call with confidence.
+                    I weighed every option against what mattered most to me — and <span style={{ fontWeight: 700, color: 'white' }}>Ask Hoot</span> helped me make the call with confidence.
                   </p>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>decide.app · weighted decision-making</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>askhoot.ai · weighted decision-making</span>
                 </div>
               </div>
             </a>
