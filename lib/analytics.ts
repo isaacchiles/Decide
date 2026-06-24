@@ -11,6 +11,11 @@
  *                   option names, criteria names, any user-entered content
  */
 
+// Import posthog-js directly so events are queued even if they fire
+// before Analytics.tsx's useEffect has called posthog.init().
+// posthog-js is a singleton — the same instance is used everywhere.
+import posthog from 'posthog-js';
+
 // ── Event catalogue ──────────────────────────────────────────────────────────
 // Add new event names here as the app grows. TypeScript will enforce
 // that only known event names are passed to trackEvent().
@@ -54,11 +59,10 @@ export function trackEvent(
 ): void {
   if (typeof window === 'undefined') return; // SSR guard
 
-  // PostHog
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ph = (window as any).posthog;
-  if (ph?.capture) {
-    ph.capture(event, properties ?? {});
+  // PostHog — posthog-js queues events internally until init() completes,
+  // so this fires reliably even if called before Analytics.tsx has mounted.
+  if (posthog?.capture) {
+    posthog.capture(event, properties ?? {});
   }
 
   // ── Add additional providers here ────────────────────────────────────────

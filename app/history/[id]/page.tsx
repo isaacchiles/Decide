@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { getDecision, type DecisionRecord } from '@/lib/decisions';
 import { resolveAffiliate } from '@/lib/affiliate';
@@ -167,7 +168,9 @@ export default function DecisionDetailPage() {
             </svg>
             My Decisions
           </button>
-          <span style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>decide</span>
+          <Link href="/" style={{ textDecoration: 'none' }}>
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>decide</span>
+          </Link>
         </div>
       </div>
 

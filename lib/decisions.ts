@@ -63,8 +63,19 @@ export async function saveDraft(params: {
 }
 
 /**
- * Save a completed decision. Takes the pre-generated draft ID and upserts
- * the full record — the draft row (if it exists) becomes the complete decision.
+ * Save a completed decision.
+ *
+ * Primary path: UPDATE the existing draft row in place — preserves created_at,
+ * keeps the audit trail, and lets PostHog see draft → complete on the same
+ * decision_id. Requires an UPDATE RLS policy on the decisions table (see SQL
+ * migration below — one statement to run once in Supabase).
+ *
+ * Fallback path: if 0 rows were updated (draft save failed earlier, so no row
+ * exists yet), INSERT the complete record as a fresh row.
+ *
+ * Required Supabase SQL (run once):
+ *   create policy "users can update own decisions" on decisions
+ *     for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
  */
 export async function saveDecision(params: {
   id: string;
@@ -81,10 +92,34 @@ export async function saveDecision(params: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return false;
 
-  const { error } = await supabase
+  // Primary: update the draft row that saveDraft created
+  const { data: updated, error: updateError } = await supabase
     .from('decisions')
-    .upsert(
-      {
+    .update({
+      title:             params.title,
+      status:            'complete',
+      step:              5,
+      criteria:          params.criteria,
+      options:           params.options,
+      scores:            params.scores,
+      winner_name:       params.winner_name,
+      winner_score:      params.winner_score,
+      share_anonymously: params.share_anonymously ?? false,
+    })
+    .eq('id', params.id)
+    .eq('user_id', user.id)
+    .select('id');
+
+  if (updateError) {
+    console.error('saveDecision update error:', updateError);
+    return false;
+  }
+
+  // Fallback: draft save failed earlier, so no row exists — insert fresh
+  if (!updated || updated.length === 0) {
+    const { error: insertError } = await supabase
+      .from('decisions')
+      .insert({
         id:                params.id,
         user_id:           user.id,
         title:             params.title,
@@ -96,14 +131,14 @@ export async function saveDecision(params: {
         winner_name:       params.winner_name,
         winner_score:      params.winner_score,
         share_anonymously: params.share_anonymously ?? false,
-      },
-      { onConflict: 'id' }
-    );
+      });
 
-  if (error) {
-    console.error('saveDecision error:', error);
-    return false;
+    if (insertError) {
+      console.error('saveDecision insert fallback error:', insertError);
+      return false;
+    }
   }
+
   return true;
 }
 

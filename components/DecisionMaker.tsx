@@ -51,12 +51,8 @@ export default function DecisionMaker() {
 
   const [step, setStep] = useState(1);
   const [decision, setDecision] = useState('');
-  const [constraints, setConstraints] = useState<string[]>([
-    'Under $40,000', 'Must fit 3 car seats', 'Electric preferred',
-  ]);
-  const [preferences, setPreferences] = useState<string[]>([
-    'I prefer Toyota', 'I like SUVs', 'Reliability over features',
-  ]);
+  const [constraints, setConstraints] = useState<string[]>([]);
+  const [preferences, setPreferences] = useState<string[]>([]);
   const [constraintInput, setConstraintInput] = useState('');
   const [preferenceInput, setPreferenceInput] = useState('');
   const [loadingStep, setLoadingStep] = useState(0);
@@ -635,7 +631,13 @@ export default function DecisionMaker() {
                   <polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" />
                 </svg>
               </button>
-              <span style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 700, color: '#2D6A4F', letterSpacing: '-0.02em' }}>decide</span>
+              <button
+                onClick={() => router.push('/')}
+                title="Back to start"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                <span style={{ fontFamily: "'Fraunces', serif", fontSize: '17px', fontWeight: 700, color: '#2D6A4F', letterSpacing: '-0.02em' }}>decide</span>
+              </button>
             </div>
           </div>
           <div style={{ height: '3px', background: '#E0DBD3' }}>

@@ -50,7 +50,9 @@ export default function HistoryPage() {
       {/* Header */}
       <div style={{ background: 'white', borderBottom: '1px solid #E0DBD3', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>decide</span>
+          <Link href="/" style={{ textDecoration: 'none' }}>
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>decide</span>
+          </Link>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <button
               onClick={() => router.push('/')}
