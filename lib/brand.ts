@@ -7,7 +7,7 @@
 
 export const BRAND = {
   /** Display name — shown in headers, share cards, OG titles */
-  name: 'Ask Hoot',
+  name: 'AskHoot',
 
   /** Production domain (no trailing slash) */
   domain: 'askhoot.ai',

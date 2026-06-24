@@ -86,7 +86,7 @@ export async function GET(request: Request) {
               }}
             />
             <span style={{ fontSize: '24px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>
-              Ask Hoot
+              AskHoot
             </span>
           </div>
 

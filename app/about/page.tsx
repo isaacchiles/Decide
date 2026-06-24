@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'About — Ask Hoot',
-  description: 'What Ask Hoot is, how affiliate links work, and how we handle your data.',
+  title: 'About — AskHoot',
+  description: 'What AskHoot is, how affiliate links work, and how we handle your data.',
 };
 
 export default function AboutPage() {
@@ -15,7 +15,7 @@ export default function AboutPage() {
       <div style={{ background: 'white', borderBottom: '1px solid #E0DBD3', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
-            <span style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>Ask Hoot</span>
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>AskHoot</span>
           </Link>
           <Link
             href="/"
@@ -31,12 +31,12 @@ export default function AboutPage() {
         {/* Hero */}
         <div style={{ marginBottom: '56px' }}>
           <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: '40px', fontWeight: 800, color: '#1A1A1A', lineHeight: 1.12, margin: '0 0 16px', letterSpacing: '-0.02em' }}>
-            About Ask Hoot
+            About AskHoot
           </h1>
           <p style={{ fontSize: '17px', color: '#4A4A4A', lineHeight: 1.7, margin: 0 }}>
-            Ask Hoot is an AI-powered weighted decision matrix that helps you make important choices with
+            AskHoot is an AI-powered weighted decision matrix that helps you make important choices with
             clarity and confidence. You describe what you&apos;re deciding, add your constraints and
-            preferences, and Ask Hoot builds a structured framework to evaluate your options — scored
+            preferences, and AskHoot builds a structured framework to evaluate your options — scored
             against what matters most to you.
           </p>
         </div>
@@ -69,7 +69,7 @@ export default function AboutPage() {
             Affiliate disclosure
           </h2>
           <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: '0 0 14px' }}>
-            Ask Hoot participates in affiliate programs, including the Amazon Services LLC Associates
+            AskHoot participates in affiliate programs, including the Amazon Services LLC Associates
             Program. When your decision leads to a product recommendation, we may show a link to that
             product on Amazon or another retailer. If you click that link and make a purchase, we earn
             a small commission — at no additional cost to you.
@@ -89,7 +89,7 @@ export default function AboutPage() {
           {/* FTC-style callout box */}
           <div style={{ background: '#FFFBF0', border: '1px solid #E9C46A', borderRadius: '10px', padding: '16px 20px', marginTop: '20px' }}>
             <p style={{ fontSize: '13px', color: '#6B5B1A', lineHeight: 1.65, margin: 0 }}>
-              <strong>Disclosure:</strong> Ask Hoot is a participant in the Amazon Services LLC
+              <strong>Disclosure:</strong> AskHoot is a participant in the Amazon Services LLC
               Associates Program, an affiliate advertising program designed to provide a means for
               sites to earn advertising fees by advertising and linking to amazon.com. We may earn a
               commission when you purchase through links on this site.
@@ -144,7 +144,7 @@ export default function AboutPage() {
       {/* Footer */}
       <div style={{ borderTop: '1px solid #E0DBD3', background: 'white' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <span style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>Ask Hoot</span>
+          <span style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>AskHoot</span>
           <div style={{ display: 'flex', gap: '24px' }}>
             <Link href="/" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none', fontWeight: 500 }}>Home</Link>
             <Link href="/about" style={{ fontSize: '13px', color: '#2D6A4F', textDecoration: 'none', fontWeight: 600 }}>About</Link>
