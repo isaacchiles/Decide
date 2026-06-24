@@ -909,13 +909,16 @@ export default function DecisionMaker() {
             ) : (
               /* ── Normal loading state ── */
               <>
-                <div style={{ display: 'flex', gap: '7px', justifyContent: 'center', marginBottom: '32px' }}>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#52B788', animation: `pulse 1.4s ease-in-out ${i * 0.22}s infinite` }} />
-                  ))}
+                <div style={{ marginBottom: '24px' }}>
+                  <img
+                    src="/hoot.png"
+                    alt="Hoot"
+                    style={{ width: '88px', height: '88px', objectFit: 'contain', animation: 'hootFloat 2.4s ease-in-out infinite' }}
+                  />
                 </div>
-                <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '26px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 36px', lineHeight: 1.25 }}>
-                  Thinking through your<br />decision...
+                <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '26px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 36px', lineHeight: 1.35 }}>
+                  Hoot is thinking&hellip;<br />
+                  <span style={{ fontSize: '15px', fontWeight: 400, color: '#6B6B6B' }}>Building your decision matrix</span>
                 </h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
                   {[
@@ -1074,6 +1077,7 @@ export default function DecisionMaker() {
       {step === 5 && (
         <div style={{ maxWidth: '660px', margin: '0 auto', padding: '48px 24px 88px' }}>
           <div style={{ textAlign: 'center', marginBottom: '44px' }}>
+            <img src="/hoot.png" alt="" style={{ width: '52px', height: '52px', objectFit: 'contain', marginBottom: '8px' }} />
             <p style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#52B788', fontWeight: 700, margin: '0 0 10px' }}>Decision Complete</p>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '34px', fontWeight: 800, color: '#1A1A1A', margin: 0, lineHeight: 1.12 }}>Based on your priorities...</h2>
           </div>

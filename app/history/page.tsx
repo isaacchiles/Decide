@@ -85,12 +85,7 @@ export default function HistoryPage() {
         ) : decisions.length === 0 ? (
           /* Empty state */
           <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#E8F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />
-              </svg>
-            </div>
+            <img src="/hoot.png" alt="Hoot" style={{ width: '88px', height: '88px', objectFit: 'contain', display: 'block', margin: '0 auto 20px' }} />
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 8px' }}>No decisions yet</h2>
             <p style={{ fontSize: '15px', color: '#6B6B6B', margin: '0 0 28px', lineHeight: 1.6 }}>Make your first decision and save it to see it here.</p>
             <button

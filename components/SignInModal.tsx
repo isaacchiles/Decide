@@ -54,6 +54,11 @@ export default function SignInModal() {
           animation: 'modalIn 0.22s ease both',
         }}>
 
+          {/* Owl */}
+          <div style={{ marginBottom: '2px' }}>
+            <img src="/hoot.png" alt="Hoot" style={{ width: '64px', height: '64px', objectFit: 'contain' }} />
+          </div>
+
           {/* AskHoot wordmark */}
           <div style={{ marginBottom: '8px' }}>
             <span style={{ fontFamily: "'Fraunces', serif", fontSize: '26px', fontWeight: 800, color: '#2D6A4F', letterSpacing: '-0.02em' }}>

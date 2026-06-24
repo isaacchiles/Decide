@@ -73,3 +73,8 @@ input[type='range']::-moz-range-thumb {
     transform: scale(0.8);
   }
 }
+
+@keyframes hootFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-7px) scale(1.04); }
+}
