@@ -40,6 +40,53 @@ const DEMO_SCORES: Scores = {
   1: { 0: 5, 1: 3, 2: 4, 3: 5, 4: 3 },
 };
 
+// ── Rotating examples ─────────────────────────────────────────────────────────
+// Shown when the user clicks "Try an example". Each set pre-fills the
+// decision, constraints, and preferences so users see what's possible.
+// Add new sets here to expand the rotation.
+const EXAMPLES = [
+  {
+    decision: 'I need to buy a laptop for work',
+    constraints: ['Under $1,500', 'At least 16 GB RAM', 'Battery life over 8 hours'],
+    preferences: ['I prefer macOS', 'Lightweight and portable', 'Fast SSD storage'],
+  },
+  {
+    decision: "I'm choosing a new mattress",
+    constraints: ['Under $1,200 for a queen', 'Ships free with easy returns', 'Trial period required'],
+    preferences: ['I sleep on my side', 'Medium-firm feel', 'Cooling materials — I run hot'],
+  },
+  {
+    decision: 'I need to pick a streaming service',
+    constraints: ['Under $15/month', 'Works on multiple devices', 'No long-term contract'],
+    preferences: ['I love documentaries and drama', 'Original content matters to me', 'Offline downloads are a plus'],
+  },
+  {
+    decision: 'I need to buy paper towels',
+    constraints: ['Under $30 for a bulk pack', 'Strong enough for kitchen spills', 'Septic-safe'],
+    preferences: ['I prefer name brands', 'Soft texture is a bonus', 'No added fragrance'],
+  },
+  {
+    decision: "I'm choosing an apartment to rent",
+    constraints: ['Under $2,000/month', 'Must allow pets', 'Within 30 minutes of downtown'],
+    preferences: ['In-unit laundry is a must', "I'd love a home office space", 'Parking matters to me'],
+  },
+  {
+    decision: 'I need to choose the right running shoes',
+    constraints: ['Under $160', 'Available in wide sizes', 'Good for road running'],
+    preferences: ['I pronate slightly', 'I prefer neutral colors', 'Lightweight over cushioned'],
+  },
+  {
+    decision: "I'm deciding on a standing desk",
+    constraints: ['Under $600', 'Electric height adjustment', 'Fits in a 10×10 ft office'],
+    preferences: ['I prefer a dark wood finish', 'Built-in cable management', 'Memory presets for heights'],
+  },
+  {
+    decision: 'I need to buy a family car',
+    constraints: ['Under $40,000', 'Must fit 3 car seats', 'Electric or hybrid preferred'],
+    preferences: ['I prefer Toyota or Honda', 'I like SUVs', 'Reliability over features'],
+  },
+];
+
 export default function DecisionMaker() {
   const router = useRouter();
 
@@ -48,6 +95,12 @@ export default function DecisionMaker() {
   // async timing (no stale closure issues when used inside callbacks).
   // Reset to a fresh UUID in restart().
   const decisionId = useRef<string>(crypto.randomUUID());
+
+  // Rotating example index — starts at a random position so different
+  // users see different examples first. Advances on each cycle click.
+  const exampleIdx = useRef(
+    typeof window !== 'undefined' ? Math.floor(Math.random() * EXAMPLES.length) : 0
+  );
 
   const [step, setStep] = useState(1);
   const [decision, setDecision] = useState('');
@@ -176,6 +229,17 @@ export default function DecisionMaker() {
     setPreferences(t.preferences);
     setActiveTemplate(t.id);
     trackEvent('template_applied', { template_id: t.id });
+  }
+
+  function cycleExample() {
+    const idx = exampleIdx.current;
+    const ex = EXAMPLES[idx];
+    setDecision(ex.decision);
+    setConstraints([...ex.constraints]);
+    setPreferences([...ex.preferences]);
+    setActiveTemplate(null); // clear any active template chip
+    exampleIdx.current = (idx + 1) % EXAMPLES.length;
+    trackEvent('example_cycled', { example_index: idx });
   }
 
   async function startLoading() {
@@ -616,20 +680,24 @@ export default function DecisionMaker() {
               )}
             </div>
             <div style={{ flex: 1, textAlign: 'center' }}>
-              <span style={{ fontSize: '13px', color: '#6B6B6B', fontWeight: 600, letterSpacing: '0.03em' }}>
-                Step {displayStep} of 4
-              </span>
+              {step > 1 && (
+                <span style={{ fontSize: '13px', color: '#6B6B6B', fontWeight: 600, letterSpacing: '0.03em' }}>
+                  Step {displayStep} of 4
+                </span>
+              )}
             </div>
-            <div style={{ width: '68px', textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px' }}>
+            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
+              <button
+                onClick={() => router.push('/about')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9B9B9B', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, padding: 0, letterSpacing: '0.01em' }}
+              >
+                About
+              </button>
               <button
                 onClick={() => router.push('/history')}
-                title="Your decision history"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B6B6B', padding: '4px', display: 'flex', alignItems: 'center' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9B9B9B', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, padding: 0, letterSpacing: '0.01em' }}
               >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" />
-                </svg>
+                History
               </button>
               <button
                 onClick={() => router.push('/')}
@@ -690,13 +758,27 @@ export default function DecisionMaker() {
 
           {/* Decision textarea */}
           <div style={{ marginBottom: '36px' }}>
-            <label style={{ display: 'block', fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6B6B6B', fontWeight: 700, marginBottom: '8px' }}>
-              The Decision
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label style={{ fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', color: '#6B6B6B', fontWeight: 700 }}>
+                The Decision
+              </label>
+              <button
+                onClick={cycleExample}
+                title="Cycle to a different example"
+                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: '1px solid #E0DBD3', borderRadius: '20px', padding: '4px 10px 4px 8px', cursor: 'pointer', color: '#6B6B6B', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 600, letterSpacing: '0.01em' }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="1 4 1 10 7 10"/>
+                  <polyline points="23 20 23 14 17 14"/>
+                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                </svg>
+                Try an example
+              </button>
+            </div>
             <textarea
               value={decision}
               onChange={e => setDecision(e.target.value)}
-              placeholder="e.g. I need to buy a family car"
+              placeholder="Describe what you're deciding..."
               rows={3}
               style={{ width: '100%', padding: '14px 16px', fontSize: '15px', lineHeight: 1.65, color: '#1A1A1A', background: 'white', border: '1.5px solid #E0DBD3', borderRadius: '8px', resize: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
             />

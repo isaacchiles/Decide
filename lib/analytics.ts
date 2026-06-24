@@ -41,6 +41,7 @@ export type AnalyticsEvent =
   | 'ai_scores_applied'         // AI pre-filled the scoring dots
   | 'decision_shared'           // user tapped Share My Decision
   | 'template_applied'          // user selected a template on Screen 1
+  | 'example_cycled'            // user clicked "Try an example" on Screen 1
   | 'affiliate_click';          // user clicked an affiliate CTA (vertical, partner, position)
 
 // ── Property types ───────────────────────────────────────────────────────────
