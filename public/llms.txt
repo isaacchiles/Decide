@@ -18,5 +18,3 @@ People facing meaningful decisions who want a structured, objective framework
 rather than gut feeling alone. Common use cases: choosing between products,
 evaluating job offers, comparing apartments, selecting services, health decisions.
 
-## Contact
-isaac.chiles@hey.com
