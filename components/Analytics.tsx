@@ -52,24 +52,34 @@ export default function Analytics() {
     // Identify authenticated users so browser events and server-side
     // $ai_generation events share the same distinct_id.
     const supabase = createClient();
+    // Helper: consume any pending marketing consent from localStorage.
+    // Called on initial load AND on SIGNED_IN so it's covered regardless
+    // of whether the magic link redirect fires INITIAL_SESSION or SIGNED_IN.
+    function applyPendingConsent() {
+      const pending = localStorage.getItem('askhoot_marketing_consent');
+      if (pending !== null) {
+        updateMarketingConsent(pending === 'true');
+        localStorage.removeItem('askhoot_marketing_consent');
+      }
+    }
+
+    const supabase = createClient();
+
+    // On initial load: identify and apply any pending consent.
+    // This covers returning users who arrive via magic link redirect,
+    // where the session is already established (INITIAL_SESSION fires, not SIGNED_IN).
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) posthog.identify(user.id, { email: user.email });
+      if (user) {
+        posthog.identify(user.id, { email: user.email });
+        applyPendingConsent();
+      }
     });
 
     // Keep identity in sync if the user signs in or out during the session.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         posthog.identify(session.user.id, { email: session.user.email });
-
-        // After magic link resolves, apply any pending marketing consent
-        // that was stored in localStorage during the sign-in modal interaction.
-        if (event === 'SIGNED_IN') {
-          const pending = localStorage.getItem('askhoot_marketing_consent');
-          if (pending !== null) {
-            updateMarketingConsent(pending === 'true');
-            localStorage.removeItem('askhoot_marketing_consent');
-          }
-        }
+        if (event === 'SIGNED_IN') applyPendingConsent();
       } else {
         posthog.reset(); // clear identity on sign-out
       }

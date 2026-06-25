@@ -16,6 +16,8 @@ export type DecisionRecord = {
   winner_score: number;
   share_anonymously: boolean;
   created_at: string;
+  ai_vertical: string | null;
+  template_id: string | null;
 };
 
 /**
@@ -86,6 +88,8 @@ export async function saveDecision(params: {
   winner_name: string;
   winner_score: number;
   share_anonymously?: boolean;
+  ai_vertical?: string | null;
+  template_id?: string | null;
 }): Promise<boolean> {
   const supabase = createClient();
 
@@ -105,6 +109,8 @@ export async function saveDecision(params: {
       winner_name:       params.winner_name,
       winner_score:      params.winner_score,
       share_anonymously: params.share_anonymously ?? false,
+      ai_vertical:       params.ai_vertical ?? null,
+      template_id:       params.template_id ?? null,
     })
     .eq('id', params.id)
     .eq('user_id', user.id)
@@ -131,6 +137,8 @@ export async function saveDecision(params: {
         winner_name:       params.winner_name,
         winner_score:      params.winner_score,
         share_anonymously: params.share_anonymously ?? false,
+        ai_vertical:       params.ai_vertical ?? null,
+        template_id:       params.template_id ?? null,
       });
 
     if (insertError) {

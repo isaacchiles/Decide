@@ -422,6 +422,8 @@ export default function DecisionMaker() {
       scores,
       winner_name:  winnerOption?.name ?? '',
       winner_score: maxScore,
+      ai_vertical:  aiVertical,
+      template_id:  activeTemplate,
     });
 
     setSaving(false);

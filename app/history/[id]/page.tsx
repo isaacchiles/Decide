@@ -196,10 +196,11 @@ export default function DecisionDetailPage() {
           {/* Affiliate CTA */}
           {(() => {
             const cta = resolveAffiliate({
-              templateId:   null,
+              templateId:   decision.template_id ?? null,
               decisionText: decision.title,
               winnerName:   decision.winner_name,
               subId:        decision.id,
+              aiVertical:   decision.ai_vertical ?? null,
             });
             return cta ? <AffiliateCTA cta={cta} position="history" /> : null;
           })()}
