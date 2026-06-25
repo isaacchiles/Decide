@@ -499,11 +499,11 @@ export default function DecisionMaker() {
     });
     if (winnerImageUrl) shareParams.set('img', winnerImageUrl);
     const shareUrl  = `${origin}/share?${shareParams.toString()}`;
-    const shareText = `I used Decide to help me ${decision.trim().toLowerCase()}. I went with ${winnerOption?.name} — scored ${maxScore.toFixed(0)} out of 100.`;
+    const shareText = `Just decided: I went with ${winnerOption?.name} — scored ${maxScore.toFixed(0)}/100. Made with AskHoot.ai.`;
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: `I chose ${winnerOption?.name} — Decide`, text: shareText, url: shareUrl });
+        await navigator.share({ title: `I chose ${winnerOption?.name} — AskHoot.ai`, text: shareText, url: shareUrl });
         trackEvent('decision_shared', { method: 'native' });
         setShareModalOpen(false);
         return;

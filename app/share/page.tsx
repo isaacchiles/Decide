@@ -12,10 +12,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const decision = params.decision ?? '';
   const img      = params.img      ?? '';
 
-  const title       = `I chose ${winner} — Decide`;
-  const description = decision
-    ? `I used Decide to help me ${decision.toLowerCase()} and landed on ${winner}${score ? ` (scored ${score}/100)` : ''}. Try it free.`
-    : `I used Decide to make a weighted decision and chose ${winner}${score ? ` with a score of ${score}/100` : ''}. Try it free.`;
+  const title       = `I chose ${winner} — AskHoot.ai`;
+  const description = `Just decided: I went with ${winner}${score ? ` — scored ${score}/100` : ''}. Made with AskHoot.ai — try it free.`;
 
   const ogParams = new URLSearchParams({ winner, score });
   if (decision) ogParams.set('decision', decision);

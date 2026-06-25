@@ -70,11 +70,11 @@ export default function DecisionDetailPage() {
     });
     if (winnerImageUrl) shareParams.set('img', winnerImageUrl);
     const shareUrl  = `${origin}/share?${shareParams.toString()}`;
-    const shareText = `I used Decide to help me ${decision.title.toLowerCase()}. I went with ${decision.winner_name} — scored ${decision.winner_score?.toFixed(0)} out of 100.`;
+    const shareText = `Just decided: I went with ${decision.winner_name} — scored ${decision.winner_score?.toFixed(0)}/100. Made with AskHoot.ai.`;
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: `I chose ${decision.winner_name} — Decide`, text: shareText, url: shareUrl });
+        await navigator.share({ title: `I chose ${decision.winner_name} — AskHoot.ai`, text: shareText, url: shareUrl });
         setShareModalOpen(false);
         return;
       } catch {
