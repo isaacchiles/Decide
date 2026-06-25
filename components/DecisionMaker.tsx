@@ -783,7 +783,7 @@ export default function DecisionMaker() {
               <button
                 onClick={cycleExample}
                 title="Cycle to a different example"
-                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: '1px solid #E0DBD3', borderRadius: '20px', padding: '4px 10px 4px 8px', cursor: 'pointer', color: '#6B6B6B', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 600, letterSpacing: '0.01em' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#E8F5EE', border: '1px solid #B7DFC9', borderRadius: '20px', padding: '4px 10px 4px 8px', cursor: 'pointer', color: '#2D6A4F', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: 600, letterSpacing: '0.01em' }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="1 4 1 10 7 10"/>

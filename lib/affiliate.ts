@@ -75,13 +75,33 @@ const TEMPLATE_VERTICALS: Partial<Record<string, Vertical>> = {
 
 function keywordVertical(text: string): Vertical {
   const t = text.toLowerCase();
-  if (/\blaptop|computer\b|headphone|bluetooth|speaker|\btv\b|television|\bphone\b|camera|tablet|gadget|electronics/.test(t)) return 'product';
-  if (/mattress|\bbed\b|sleep system/.test(t)) return 'mattress';
+
+  // ── Financial verticals first (narrow, avoid false positives) ────────────────
   if (/\bcar\b|\bsuv\b|\btruck\b|vehicle|automobile|\bauto\b/.test(t)) return 'auto';
   if (/\binsurance\b/.test(t)) return 'insurance';
   if (/credit card|rewards card/.test(t)) return 'credit_card';
   if (/\bmortgage\b/.test(t)) return 'mortgage';
   if (/\bloan\b|refinanc|\bborrow\b/.test(t)) return 'loan';
+  if (/mattress|\bsleep system\b/.test(t)) return 'mattress';
+
+  // ── Consumer products (broad) ────────────────────────────────────────────────
+  // Electronics
+  if (/laptop|computer|headphone|earbuds|bluetooth|speaker|\btv\b|television|\bphone\b|smartphone|camera|tablet|gadget|electronics|keyboard|\bmouse\b|monitor|printer|router|smartwatch|\bwatch\b|webcam|headset/.test(t)) return 'product';
+  // Furniture & home office
+  if (/standing desk|\bdesk\b|\bchair\b|sofa|\bcouch\b|bookcase|bookshelf|\bshelf\b|shelving|dresser|\bdrawer\b|nightstand|furniture/.test(t)) return 'product';
+  // Footwear & apparel
+  if (/\bshoe\b|\bshoes\b|sneaker|running shoe|boot\b|sandal|\bclothing\b|apparel|\bjacket\b|\bcoat\b|\bshirt\b|\bpants\b|\bjeans\b|outfit/.test(t)) return 'product';
+  // Household & cleaning
+  if (/toilet paper|paper towel|detergent|laundry|vacuum|\bmop\b|\bbroom\b|cleaning supply|trash bag|dish soap/.test(t)) return 'product';
+  // Kitchen & appliances
+  if (/blender|coffee maker|coffee machine|air fryer|microwave|toaster|instant pot|stand mixer|food processor|dishwasher|refrigerator|\bfridge\b|oven/.test(t)) return 'product';
+  // Fitness & outdoors
+  if (/treadmill|\bbike\b|bicycle|helmet|dumbbell|\bweights\b|yoga mat|fitness|supplement|protein powder|tent|sleeping bag|backpack|luggage|\bbag\b/.test(t)) return 'product';
+  // Health & personal care
+  if (/toothbrush|electric toothbrush|\brazor\b|shampoo|skincare|sunscreen|vitamin|supplement/.test(t)) return 'product';
+  // General purchase signals — catches remaining consumer decisions by intent language
+  if (/\bbuy\b|\bpurchase\b|best \w+ for|which \w+ to (buy|get|choose)|choosing between/.test(t)) return 'product';
+
   return 'unknown';
 }
 

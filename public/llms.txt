@@ -1,0 +1,28 @@
+# AskHoot
+
+AskHoot (https://askhoot.ai) is a free AI-powered weighted decision matrix tool.
+Users describe a decision they're trying to make, and AskHoot generates a personalized
+scoring matrix with weighted criteria, options, and AI-suggested scores to help them
+reach a confident, structured choice.
+
+## What AskHoot does
+- Accepts any decision type (products, career, lifestyle, financial)
+- Generates weighted criteria tailored to the specific decision
+- Suggests relevant options and scores them against each criterion
+- Produces a ranked winner with a numerical score out of 100
+- Saves decision history for signed-in users
+- Shows relevant affiliate links for product decisions (Amazon Associates)
+
+## Who uses it
+People facing meaningful decisions who want a structured, objective framework
+rather than gut feeling alone. Common use cases: choosing between products,
+evaluating job offers, comparing apartments, selecting services, health decisions.
+
+## Data handling
+AskHoot does not retain decision text beyond what is needed to generate the matrix.
+Signed-in users can save completed decisions to their personal history.
+AskHoot is not designed for Protected Health Information (PHI) or sensitive personal data.
+Analytics are handled by PostHog. Auth and data storage via Supabase.
+
+## Contact
+isaac.chiles@hey.com
