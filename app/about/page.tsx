@@ -49,10 +49,10 @@ export default function AboutPage() {
             How it works
           </h2>
           <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: '0 0 14px' }}>
-            When you start a decision, Claude — Anthropic&apos;s AI model — reads your description,
-            constraints, and preferences, then generates weighted criteria (the things that actually
-            matter for your specific decision) and a set of options to evaluate. You can adjust the
-            weights, add your own options, and score each one across every criterion.
+            When you start a decision, AskHoot reads your description, constraints, and preferences,
+            then generates weighted criteria — the things that actually matter for your specific
+            decision — and a set of options to evaluate. You can adjust the weights, add your own
+            options, and score each one across every criterion.
           </p>
           <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: 0 }}>
             The result is a ranked recommendation grounded in your priorities — not a generic top-ten
@@ -102,21 +102,37 @@ export default function AboutPage() {
         {/* Privacy */}
         <section style={{ marginBottom: '48px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '24px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 16px', letterSpacing: '-0.01em' }}>
-            Privacy
+            Privacy &amp; data
           </h2>
           <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: '0 0 14px' }}>
-            Decisions you save are stored in your account and are not shared or sold. We do not use
-            your decision content to train AI models.
+            Decisions you save are stored in your account. Your personal data and individual decision
+            content are never sold to third parties.
+          </p>
+          <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: '0 0 14px' }}>
+            We may analyze anonymized, aggregate patterns across decisions — for example,
+            understanding how people collectively weigh criteria like safety versus cost in a given
+            category — to improve the product and develop category-level insights.
           </p>
           <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: '0 0 14px' }}>
             We collect behavioral analytics — which screens you visit, how many options you add,
-            whether you complete a decision — to understand how to improve the product. We never send
-            the text of your decisions, constraints, preferences, or option names to our analytics
-            platform. Only aggregate counts and timing metadata are tracked.
+            whether you complete a decision — to understand how to improve the product. We do not
+            send the text of your decisions, constraints, preferences, or option names to our
+            analytics platform. We do not use your decision content to train AI models.
           </p>
+
+          {/* PHI / sensitive data warning */}
+          <div style={{ background: '#FFF8F0', border: '1px solid #F4A261', borderRadius: '10px', padding: '16px 20px', margin: '20px 0' }}>
+            <p style={{ fontSize: '13px', color: '#7A3B10', lineHeight: 1.65, margin: 0 }}>
+              <strong>Please note:</strong> AskHoot is not designed for sensitive personal data.
+              Do not enter Protected Health Information (PHI), medical records, government ID
+              numbers, financial account details, or other sensitive information into your decisions.
+              AskHoot is not HIPAA-compliant.
+            </p>
+          </div>
+
           <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: 0 }}>
-            We use Supabase for data storage, Anthropic&apos;s API for AI inference, and PostHog for
-            product analytics. Each provider&apos;s privacy policy governs how they handle data
+            Our technology partners include Supabase (data storage), Anthropic (AI), and PostHog
+            (product analytics). Each provider&apos;s privacy policy governs how they handle data
             passed to their services.
           </p>
         </section>
