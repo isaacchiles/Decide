@@ -31,6 +31,15 @@ export async function updateMarketingConsent(consent: boolean): Promise<void> {
     );
 
   if (error) console.error('updateMarketingConsent error:', error);
+
+  // Add/update contact in Resend audience — fire-and-forget.
+  // For new users this triggers Sequence A (welcome automation).
+  // Sets unsubscribed=true for users who declined consent.
+  fetch('/api/resend-contact', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ consent }),
+  }).catch(() => { /* non-critical — don't block on email infra */ });
 }
 
 /**

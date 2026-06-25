@@ -445,6 +445,19 @@ export default function DecisionMaker() {
         criteria_count:    criteria.length,
         winner_score:      Math.round(maxScore * 10) / 10,
       });
+
+      // Fire decision.completed event to Resend — triggers B1 follow-up automation.
+      // Fire-and-forget: email is non-critical path, never block the UI on it.
+      fetch('/api/resend-event', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          winner_name:    winnerOption?.name ?? '',
+          winner_score:   Math.round(maxScore),
+          decision_title: decision.trim(),
+          ai_vertical:    aiVertical,
+        }),
+      }).catch(() => { /* silent */ });
     } else {
       setSaveError(true);
     }
