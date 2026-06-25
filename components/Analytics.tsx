@@ -16,7 +16,12 @@ import { trackEvent } from '@/lib/analytics';
 export default function Analytics() {
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
+    // ui_host: PostHog's real domain — used for toolbar and session recordings.
+    // api_host: proxy subdomain when available, direct PostHog otherwise.
+    //   The proxy (e.askhoot.ai) routes events through Cloudflare so they
+    //   aren't blocked by ad blockers. Falls back to direct if not configured.
+    const uiHost  = process.env.NEXT_PUBLIC_POSTHOG_HOST  ?? 'https://us.posthog.com';
+    const apiHost = process.env.NEXT_PUBLIC_POSTHOG_PROXY_HOST ?? uiHost;
 
     if (!key) {
       // No key in env — skip silently (e.g. local dev without PostHog)
@@ -24,7 +29,8 @@ export default function Analytics() {
     }
 
     posthog.init(key, {
-      api_host: host,
+      api_host: apiHost,
+      ui_host:  uiHost,
 
       // Don't track on first load — wait for explicit capture() calls.
       // This prevents auto-capturing page views with URL params that
