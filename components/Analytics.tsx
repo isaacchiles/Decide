@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import posthog from 'posthog-js';
 import { createClient } from '@/lib/supabase/client';
+import { updateMarketingConsent } from '@/lib/profile';
 
 /**
  * Analytics — initializes PostHog once on the client side.
@@ -56,9 +57,19 @@ export default function Analytics() {
     });
 
     // Keep identity in sync if the user signs in or out during the session.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         posthog.identify(session.user.id, { email: session.user.email });
+
+        // After magic link resolves, apply any pending marketing consent
+        // that was stored in localStorage during the sign-in modal interaction.
+        if (event === 'SIGNED_IN') {
+          const pending = localStorage.getItem('askhoot_marketing_consent');
+          if (pending !== null) {
+            updateMarketingConsent(pending === 'true');
+            localStorage.removeItem('askhoot_marketing_consent');
+          }
+        }
       } else {
         posthog.reset(); // clear identity on sign-out
       }

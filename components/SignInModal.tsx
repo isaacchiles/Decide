@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SignInModal() {
-  const [email, setEmail]     = useState('');
-  const [sent, setSent]       = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [email, setEmail]               = useState('');
+  const [sent, setSent]                 = useState(false);
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState('');
+  const [marketingConsent, setMarketing] = useState(true);
 
   const supabase = createClient();
   const router = useRouter();
@@ -27,6 +28,8 @@ export default function SignInModal() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    // Persist consent so Analytics.tsx can pick it up after the magic link redirect
+    localStorage.setItem('askhoot_marketing_consent', String(marketingConsent));
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
@@ -120,6 +123,20 @@ export default function SignInModal() {
                   />
                 </div>
                 {error && <p style={{ fontSize: '13px', color: '#C1121F', margin: '0 0 10px', textAlign: 'left' }}>{error}</p>}
+
+                {/* Marketing consent */}
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '16px', cursor: 'pointer', textAlign: 'left' }}>
+                  <input
+                    type="checkbox"
+                    checked={marketingConsent}
+                    onChange={e => setMarketing(e.target.checked)}
+                    style={{ marginTop: '2px', accentColor: '#2D6A4F', width: '15px', height: '15px', flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#6B6B6B', lineHeight: 1.55 }}>
+                    Send me occasional tips and product updates. Unsubscribe any time.
+                  </span>
+                </label>
+
                 <button
                   type="submit"
                   disabled={loading || !email}
