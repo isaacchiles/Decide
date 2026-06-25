@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       .map((o: { name: string }, i: number) => `${i}. ${o.name}`)
       .join('\n');
 
-    const message = await anthropic.messages.create({
+    const message = await (anthropic.messages.create as Function)({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       messages: [
@@ -57,7 +57,7 @@ Example format:
         posthogTraceId:    trace_id ?? decision_id,
         posthogProperties: { decision_id },
       } : {}),
-    } as Parameters<typeof anthropic.messages.create>[0]);
+    }) as Anthropic.Message;
 
     const text = message.content[0]?.type === 'text' ? message.content[0].text : '';
     const match = text.match(/\{[\s\S]*\}/);

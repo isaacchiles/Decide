@@ -54,7 +54,7 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
   ]
 }`;
 
-    const message = await client.messages.create({
+    const message = await (client.messages.create as Function)({
       model,
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
@@ -63,7 +63,7 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
         posthogTraceId:    trace_id ?? decision_id,
         posthogProperties: { decision_id },
       } : {}),
-    } as Parameters<typeof client.messages.create>[0]);
+    }) as Anthropic.Message;
 
     const text =
       message.content[0]?.type === 'text' ? message.content[0].text : '';

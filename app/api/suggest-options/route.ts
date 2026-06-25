@@ -40,7 +40,7 @@ Rules:
 Return ONLY valid JSON, no other text:
 { "options": [{ "name": "string" }, { "name": "string" }] }`;
 
-    const message = await client.messages.create({
+    const message = await (client.messages.create as Function)({
       model: 'claude-sonnet-4-6',
       max_tokens: 256,
       messages: [{ role: 'user', content: prompt }],
@@ -49,7 +49,7 @@ Return ONLY valid JSON, no other text:
         posthogTraceId:    trace_id ?? decision_id,
         posthogProperties: { decision_id },
       } : {}),
-    } as Parameters<typeof client.messages.create>[0]);
+    }) as Anthropic.Message;
 
     const text = message.content[0]?.type === 'text' ? message.content[0].text : '';
     const match = text.match(/\{[\s\S]*\}/);
