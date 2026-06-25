@@ -19,10 +19,8 @@ rather than gut feeling alone. Common use cases: choosing between products,
 evaluating job offers, comparing apartments, selecting services, health decisions.
 
 ## Data handling
-AskHoot does not retain decision text beyond what is needed to generate the matrix.
-Signed-in users can save completed decisions to their personal history.
+Signed-in users' completed decisions are saved to their account and retained indefinitely.
 AskHoot is not designed for Protected Health Information (PHI) or sensitive personal data.
-Analytics are handled by PostHog. Auth and data storage via Supabase.
 
 ## Contact
 isaac.chiles@hey.com
