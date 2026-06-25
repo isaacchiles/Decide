@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { PostHogAI } from '@posthog/ai';
 import { createClient } from '@/lib/supabase/server';
 import { checkAndIncrementLimit } from '@/lib/ratelimit';
+import { posthogServer } from '@/lib/posthog-server';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = posthogServer ? new PostHogAI(anthropic, posthogServer) : anthropic;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -16,7 +19,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { decision, constraints, preferences } = await req.json();
+    const { decision, constraints, preferences, decision_id, trace_id } = await req.json();
     const model = 'claude-sonnet-4-6';
 
     const prompt = `You are a decision-making assistant helping someone make a clear, structured decision.
@@ -48,11 +51,18 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
   ]
 }`;
 
-    const message = await client.messages.create({
-      model,
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const message = await client.messages.create(
+      {
+        model,
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      },
+      posthogServer ? {
+        posthog_distinct_id: user.id,
+        posthog_trace_id:    trace_id ?? decision_id,
+        posthog_properties:  { decision_id },
+      } : undefined,
+    );
 
     const text =
       message.content[0]?.type === 'text' ? message.content[0].text : '';

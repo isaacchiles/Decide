@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { PostHogAI } from '@posthog/ai';
 import { createClient } from '@/lib/supabase/server';
 import { checkAndIncrementLimit } from '@/lib/ratelimit';
+import { posthogServer } from '@/lib/posthog-server';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropicBase = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = posthogServer ? new PostHogAI(anthropicBase, posthogServer) : anthropicBase;
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -16,7 +19,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { decision, constraints, preferences, existingOptions } = await req.json();
+    const { decision, constraints, preferences, existingOptions, decision_id, trace_id } = await req.json();
 
     const existing = (existingOptions as string[]).join(', ');
 
@@ -36,11 +39,18 @@ Rules:
 Return ONLY valid JSON, no other text:
 { "options": [{ "name": "string" }, { "name": "string" }] }`;
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 256,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const message = await client.messages.create(
+      {
+        model: 'claude-sonnet-4-6',
+        max_tokens: 256,
+        messages: [{ role: 'user', content: prompt }],
+      },
+      posthogServer ? {
+        posthog_distinct_id: user.id,
+        posthog_trace_id:    trace_id ?? decision_id,
+        posthog_properties:  { decision_id },
+      } : undefined,
+    );
 
     const text = message.content[0]?.type === 'text' ? message.content[0].text : '';
     const match = text.match(/\{[\s\S]*\}/);

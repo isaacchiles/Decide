@@ -202,7 +202,7 @@ export default function DecisionMaker() {
   async function suggestMoreOptions() {
     if (suggestMoreCount >= SUGGEST_MORE_LIMIT || suggestMoreLoading) return;
     setSuggestMoreLoading(true);
-    trackEvent('ai_suggest_more_clicked', { count: suggestMoreCount + 1 });
+    trackEvent('ai_suggest_more_clicked', { decision_id: decisionId.current, count: suggestMoreCount + 1 });
     try {
       const res = await fetch('/api/suggest-options', {
         method: 'POST',
@@ -212,6 +212,8 @@ export default function DecisionMaker() {
           constraints,
           preferences,
           existingOptions: options.map(o => o.name),
+          decision_id: decisionId.current,
+          trace_id:    decisionId.current,
         }),
       });
       const data = await res.json();
@@ -228,7 +230,7 @@ export default function DecisionMaker() {
     setConstraints(t.constraints);
     setPreferences(t.preferences);
     setActiveTemplate(t.id);
-    trackEvent('template_applied', { template_id: t.id });
+    trackEvent('template_applied', { decision_id: decisionId.current, template_id: t.id });
   }
 
   function cycleExample() {
@@ -281,7 +283,7 @@ export default function DecisionMaker() {
     const apiFetch = fetch('/api/generate-matrix', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ decision, constraints, preferences }),
+      body: JSON.stringify({ decision, constraints, preferences, decision_id: id, trace_id: id }),
     })
       .then(r => r.json())
       .then(data => {
@@ -326,7 +328,7 @@ export default function DecisionMaker() {
     if (v) {
       setConstraints(prev => [...prev, v]);
       setConstraintInput('');
-      trackEvent('constraint_added', { total: constraints.length + 1 });
+      trackEvent('constraint_added', { decision_id: decisionId.current, total: constraints.length + 1 });
     }
   }
 
@@ -335,7 +337,7 @@ export default function DecisionMaker() {
     if (v) {
       setPreferences(prev => [...prev, v]);
       setPreferenceInput('');
-      trackEvent('preference_added', { total: preferences.length + 1 });
+      trackEvent('preference_added', { decision_id: decisionId.current, total: preferences.length + 1 });
     }
   }
 
@@ -344,7 +346,7 @@ export default function DecisionMaker() {
     if (v) {
       setOptions(prev => [...prev, { name: v, source: 'You added' }]);
       setNewOptionInput('');
-      trackEvent('option_added', { total: options.length + 1 });
+      trackEvent('option_added', { decision_id: decisionId.current, total: options.length + 1 });
     }
   }
 
@@ -356,9 +358,10 @@ export default function DecisionMaker() {
     });
     // Track that weights were adjusted (criterion index only, not name)
     trackEvent('criteria_weight_adjusted', {
+      decision_id:     decisionId.current,
       criterion_index: i,
-      new_weight: value,
-      total_weight: criteria.reduce((s, c, idx) => s + (idx === i ? value : c.weight), 0),
+      new_weight:      value,
+      total_weight:    criteria.reduce((s, c, idx) => s + (idx === i ? value : c.weight), 0),
     });
   }
 
@@ -376,9 +379,10 @@ export default function DecisionMaker() {
     // (React may call them twice in StrictMode / concurrent rendering)
     const cur = (scores[oi] ?? {})[ci] ?? 0;
     trackEvent('score_set', {
-      option_index: oi,
+      decision_id:     decisionId.current,
+      option_index:    oi,
       criterion_index: ci,
-      score: v === cur ? 0 : v,
+      score:           v === cur ? 0 : v,
     });
   }
 
@@ -448,12 +452,12 @@ export default function DecisionMaker() {
       const res = await fetch('/api/suggest-scores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decision, criteria, options }),
+        body: JSON.stringify({ decision, criteria, options, decision_id: decisionId.current, trace_id: decisionId.current }),
       });
       const data = await res.json();
       if (data.scores && Object.keys(data.scores).length > 0) {
         setScores(data.scores);
-        trackEvent('ai_scores_applied', { options_count: options.length, criteria_count: criteria.length });
+        trackEvent('ai_scores_applied', { decision_id: decisionId.current, options_count: options.length, criteria_count: criteria.length });
       }
     } catch {
       // Silently proceed — user can score manually
@@ -797,7 +801,7 @@ export default function DecisionMaker() {
                   <button
                     onClick={() => {
                       setConstraints(prev => prev.filter((_, j) => j !== i));
-                      trackEvent('constraint_removed', { remaining: constraints.length - 1 });
+                      trackEvent('constraint_removed', { decision_id: decisionId.current, remaining: constraints.length - 1 });
                     }}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(45,106,79,0.14)', border: 'none', cursor: 'pointer', color: '#2D6A4F', fontSize: '14px', lineHeight: 1, padding: 0, flexShrink: 0 }}
                   >×</button>
@@ -835,7 +839,7 @@ export default function DecisionMaker() {
                   <button
                     onClick={() => {
                       setPreferences(prev => prev.filter((_, j) => j !== i));
-                      trackEvent('preference_removed', { remaining: preferences.length - 1 });
+                      trackEvent('preference_removed', { decision_id: decisionId.current, remaining: preferences.length - 1 });
                     }}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(139,105,20,0.14)', border: 'none', cursor: 'pointer', color: '#8B6914', fontSize: '14px', lineHeight: 1, padding: 0, flexShrink: 0 }}
                   >×</button>

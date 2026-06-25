@@ -1,9 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { PostHogAI } from '@posthog/ai';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkAndIncrementLimit } from '@/lib/ratelimit';
+import { posthogServer } from '@/lib/posthog-server';
 
-const anthropic = new Anthropic();
+const anthropicBase = new Anthropic();
+const anthropic = posthogServer ? new PostHogAI(anthropicBase, posthogServer) : anthropicBase;
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -16,7 +19,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { decision, criteria, options } = await request.json();
+    const { decision, criteria, options, decision_id, trace_id } = await request.json();
 
     const criteriaList = criteria
       .map((c: { name: string; weight: number }, i: number) => `${i}. ${c.name} (${c.weight}% weight)`)
@@ -26,7 +29,8 @@ export async function POST(request: Request) {
       .map((o: { name: string }, i: number) => `${i}. ${o.name}`)
       .join('\n');
 
-    const message = await anthropic.messages.create({
+    const message = await anthropic.messages.create(
+      {
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       messages: [
@@ -48,7 +52,13 @@ Example format:
 {"0":{"0":4,"1":2,"2":5},"1":{"0":3,"1":5,"2":2}}`,
         },
       ],
-    });
+      },
+      posthogServer ? {
+        posthog_distinct_id: user.id,
+        posthog_trace_id:    trace_id ?? decision_id,
+        posthog_properties:  { decision_id },
+      } : undefined,
+    );
 
     const text = message.content[0]?.type === 'text' ? message.content[0].text : '';
     const match = text.match(/\{[\s\S]*\}/);
