@@ -49,9 +49,6 @@ export default function Analytics() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).posthog = posthog;
 
-    // Identify authenticated users so browser events and server-side
-    // $ai_generation events share the same distinct_id.
-    const supabase = createClient();
     // Helper: consume any pending marketing consent from localStorage.
     // Called on initial load AND on SIGNED_IN so it's covered regardless
     // of whether the magic link redirect fires INITIAL_SESSION or SIGNED_IN.
@@ -63,6 +60,8 @@ export default function Analytics() {
       }
     }
 
+    // Identify authenticated users so browser events and server-side
+    // $ai_generation events share the same distinct_id.
     const supabase = createClient();
 
     // On initial load: identify and apply any pending consent.
