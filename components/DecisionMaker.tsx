@@ -431,7 +431,19 @@ export default function DecisionMaker() {
       setSavedId(decisionId.current);
       trackEvent('decision_saved', {
         decision_id:  decisionId.current,
+        category:     aiVertical ?? undefined,
         winner_score: Math.round(maxScore * 10) / 10,
+      });
+      // Business conversion event — used for funnel analysis and cohort building.
+      // Tracks counts, not user-entered content (privacy rule: no text from user).
+      trackEvent('decision_completed', {
+        decision_id:       decisionId.current,
+        category:          aiVertical ?? undefined,
+        constraints_count: constraints.length,
+        preferences_count: preferences.length,
+        options_count:     options.length,
+        criteria_count:    criteria.length,
+        winner_score:      Math.round(maxScore * 10) / 10,
       });
     } else {
       setSaveError(true);

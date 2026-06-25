@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import posthog from 'posthog-js';
 import { createClient } from '@/lib/supabase/client';
 import { updateMarketingConsent } from '@/lib/profile';
+import { trackEvent } from '@/lib/analytics';
 
 /**
  * Analytics — initializes PostHog once on the client side.
@@ -48,6 +49,20 @@ export default function Analytics() {
     // without importing posthog-js in every component
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).posthog = posthog;
+
+    // Fire once per browser session for attribution.
+    // sessionStorage is cleared when the tab closes, so this re-fires
+    // on every new visit but not on same-session page navigations.
+    if (!sessionStorage.getItem('ph_session_started')) {
+      sessionStorage.setItem('ph_session_started', '1');
+      const params = new URLSearchParams(window.location.search);
+      trackEvent('decision_session_started', {
+        referrer:     document.referrer || undefined,
+        utm_source:   params.get('utm_source')   ?? undefined,
+        utm_medium:   params.get('utm_medium')   ?? undefined,
+        utm_campaign: params.get('utm_campaign') ?? undefined,
+      });
+    }
 
     // Helper: consume any pending marketing consent from localStorage.
     // Called on initial load AND on SIGNED_IN so it's covered regardless

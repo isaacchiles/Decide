@@ -22,6 +22,7 @@ import posthog from 'posthog-js';
 
 export type AnalyticsEvent =
   | 'screen_viewed'
+  | 'decision_session_started'  // first page load in a browser session — carries UTM/referrer
   | 'decision_started'          // CTA clicked on Screen 1
   | 'constraint_added'
   | 'preference_added'
@@ -38,6 +39,7 @@ export type AnalyticsEvent =
   | 'recommendation_viewed'     // reached Screen 5
   | 'decision_restarted'        // "Start a New Decision"
   | 'decision_saved'            // auto-save succeeded
+  | 'decision_completed'        // decision reached the results screen and was saved successfully
   | 'ai_scores_applied'         // AI pre-filled the scoring dots
   | 'decision_shared'           // user tapped Share My Decision
   | 'template_applied'          // user selected a template on Screen 1
