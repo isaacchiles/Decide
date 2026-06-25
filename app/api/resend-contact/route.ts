@@ -1,24 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { resendClient, RESEND_AUDIENCE_ID } from '@/lib/resend';
+import { resendClient } from '@/lib/resend';
 
 /**
  * POST /api/resend-contact
  *
- * Adds or updates a contact in the Resend audience.
- * Called from lib/profile.ts → updateMarketingConsent() after the user
- * resolves their consent preference on signup.
+ * Fires a user.signed_up event to Resend for the authenticated user.
+ * If the contact doesn't exist yet, Resend creates it automatically.
+ * Triggers Sequence A (welcome + activation nudge) in the Resend automation.
  *
- * Creates the contact if new (triggers the welcome automation in Resend),
- * or updates unsubscribed status if returning.
+ * Only called when consent === true (fired from lib/profile.ts).
+ * Declined users are never added to Resend.
  *
  * Body: { consent: boolean }
  */
 export async function POST(req: Request) {
-  if (!resendClient || !RESEND_AUDIENCE_ID) {
-    // Resend not configured — skip silently (local dev without keys)
-    return NextResponse.json({ ok: true });
-  }
+  if (!resendClient) return NextResponse.json({ ok: true });
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -26,14 +23,16 @@ export async function POST(req: Request) {
 
   const { consent } = await req.json();
 
+  // Only fire for consenting users — declined users never enter the automation.
+  if (!consent) return NextResponse.json({ ok: true });
+
   try {
-    await resendClient.contacts.create({
-      audienceId:   RESEND_AUDIENCE_ID,
-      email:        user.email,
-      unsubscribed: consent === false,
+    await resendClient.events.send({
+      event: 'user.signed_up',
+      email: user.email,
+      payload: {},
     });
   } catch (err) {
-    // contact.create upserts, so a duplicate is fine — log anything else
     console.error('resend-contact error:', err);
   }
 

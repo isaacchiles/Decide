@@ -1,22 +1,23 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { resendClient, RESEND_AUDIENCE_ID } from '@/lib/resend';
+import { resendClient } from '@/lib/resend';
 
 /**
  * POST /api/resend-event
  *
  * Fires a decision.completed event to Resend for the authenticated user.
- * Triggers the post-decision follow-up automation (B1) and keeps
- * decisions_count in sync as a contact property for re-engagement logic (B2).
+ * If the user exists in Resend (consented), this triggers Sequence B
+ * (24hr follow-up B1 and 14-day re-engagement B2).
+ *
+ * If the user never consented, Resend has no record of them and the event
+ * is a no-op — no email is sent.
  *
  * Called fire-and-forget from DecisionMaker.tsx after a successful save.
  *
  * Body: { winner_name, winner_score, decision_title, ai_vertical }
  */
 export async function POST(req: Request) {
-  if (!resendClient || !RESEND_AUDIENCE_ID) {
-    return NextResponse.json({ ok: true });
-  }
+  if (!resendClient) return NextResponse.json({ ok: true });
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,8 +25,9 @@ export async function POST(req: Request) {
 
   const { winner_name, winner_score, decision_title, ai_vertical } = await req.json();
 
-  // Count total completed decisions for this user — used in Resend conditions
-  // to gate B1 repeat sends and power re-engagement logic.
+  // Count total completed decisions for this user.
+  // Used in Resend automation conditions to gate repeat sends (B1)
+  // and power re-engagement logic (B2).
   const { count } = await supabase
     .from('decisions')
     .select('id', { count: 'exact', head: true })
@@ -35,49 +37,19 @@ export async function POST(req: Request) {
   const decisions_count = count ?? 1;
 
   try {
-    // Update contact property so Resend conditions can reference decisions_count
-    await resendClient.contacts.update({
-      audienceId: RESEND_AUDIENCE_ID,
-      email:      user.email,
-      // Resend contacts don't have arbitrary properties natively —
-      // the event properties below are what drive automation logic.
-    });
-  } catch {
-    // Contact may not exist yet (e.g. user opted out of marketing) — that's fine.
-    // The event still fires; Resend will route it if the contact exists.
-  }
-
-  try {
-    // Fire the custom event — triggers the decision.completed automation in Resend.
-    // Event must be defined in Resend dashboard with these property names + types.
-    await (resendClient as any).events?.create?.({
-      audienceId:  RESEND_AUDIENCE_ID,
-      email:       user.email,
-      eventName:   'decision.completed',
-      properties:  {
+    // resend.events.send() — the correct SDK method for firing custom events.
+    // Properties in payload are available in Resend templates as event.*
+    // e.g. event.winner_name, event.winner_score, event.decisions_count
+    await resendClient.events.send({
+      event: 'decision.completed',
+      email: user.email,
+      payload: {
         winner_name,
-        winner_score:    Math.round(winner_score),
-        decision_title:  decision_title ?? '',
-        ai_vertical:     ai_vertical    ?? '',
+        winner_score:   Math.round(winner_score ?? 0),
+        decision_title: decision_title ?? '',
+        ai_vertical:    ai_vertical    ?? '',
         decisions_count,
       },
-    }) ?? await fetch('https://api.resend.com/audiences/' + RESEND_AUDIENCE_ID + '/events', {
-      method:  'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type':  'application/json',
-      },
-      body: JSON.stringify({
-        email:      user.email,
-        event_name: 'decision.completed',
-        properties: {
-          winner_name,
-          winner_score:    Math.round(winner_score),
-          decision_title:  decision_title ?? '',
-          ai_vertical:     ai_vertical    ?? '',
-          decisions_count,
-        },
-      }),
     });
   } catch (err) {
     console.error('resend-event error:', err);
