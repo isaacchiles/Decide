@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { PostHogAI } from '@posthog/ai';
+import { PostHogAnthropic } from '@posthog/ai/anthropic';
 import { createClient } from '@/lib/supabase/server';
 import { checkAndIncrementLimit } from '@/lib/ratelimit';
 import { posthogServer } from '@/lib/posthog-server';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const client = posthogServer ? new PostHogAI(anthropic, posthogServer) : anthropic;
+// Use PostHogAnthropic when posthogServer is available so every Claude call
+// automatically captures $ai_generation events with tokens, cost, and latency.
+const client = posthogServer
+  ? new PostHogAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY!, posthog: posthogServer })
+  : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -51,18 +54,16 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
   ]
 }`;
 
-    const message = await client.messages.create(
-      {
-        model,
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }],
-      },
-      posthogServer ? {
-        posthog_distinct_id: user.id,
-        posthog_trace_id:    trace_id ?? decision_id,
-        posthog_properties:  { decision_id },
-      } : undefined,
-    );
+    const message = await client.messages.create({
+      model,
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: prompt }],
+      ...(posthogServer ? {
+        posthogDistinctId: user.id,
+        posthogTraceId:    trace_id ?? decision_id,
+        posthogProperties: { decision_id },
+      } : {}),
+    } as Parameters<typeof client.messages.create>[0]);
 
     const text =
       message.content[0]?.type === 'text' ? message.content[0].text : '';

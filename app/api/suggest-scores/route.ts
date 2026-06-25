@@ -1,12 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { PostHogAI } from '@posthog/ai';
+import { PostHogAnthropic } from '@posthog/ai/anthropic';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkAndIncrementLimit } from '@/lib/ratelimit';
 import { posthogServer } from '@/lib/posthog-server';
 
-const anthropicBase = new Anthropic();
-const anthropic = posthogServer ? new PostHogAI(anthropicBase, posthogServer) : anthropicBase;
+const anthropic = posthogServer
+  ? new PostHogAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY!, posthog: posthogServer })
+  : new Anthropic();
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -29,8 +30,7 @@ export async function POST(request: Request) {
       .map((o: { name: string }, i: number) => `${i}. ${o.name}`)
       .join('\n');
 
-    const message = await anthropic.messages.create(
-      {
+    const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       messages: [
@@ -52,13 +52,12 @@ Example format:
 {"0":{"0":4,"1":2,"2":5},"1":{"0":3,"1":5,"2":2}}`,
         },
       ],
-      },
-      posthogServer ? {
-        posthog_distinct_id: user.id,
-        posthog_trace_id:    trace_id ?? decision_id,
-        posthog_properties:  { decision_id },
-      } : undefined,
-    );
+      ...(posthogServer ? {
+        posthogDistinctId: user.id,
+        posthogTraceId:    trace_id ?? decision_id,
+        posthogProperties: { decision_id },
+      } : {}),
+    } as Parameters<typeof anthropic.messages.create>[0]);
 
     const text = message.content[0]?.type === 'text' ? message.content[0].text : '';
     const match = text.match(/\{[\s\S]*\}/);
