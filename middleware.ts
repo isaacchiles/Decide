@@ -41,6 +41,10 @@ export async function middleware(request: NextRequest) {
     !pathname.startsWith('/auth') &&
     !pathname.startsWith('/api') &&
     !pathname.startsWith('/share') &&
+    !pathname.startsWith('/blog') &&
+    !pathname.startsWith('/outstatic') &&  // Outstatic has its own GitHub OAuth
+    !pathname.startsWith('/about') &&
+    !pathname.startsWith('/privacy') &&
     pathname !== '/_next'
   ) {
     const url = request.nextUrl.clone();

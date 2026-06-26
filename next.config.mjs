@@ -1,4 +1,4 @@
-/** @type {import('next').NextConfig} */
+import { withOutstatic } from 'outstatic/next-plugin';
 
 // Fail the production build if critical env vars are missing.
 // Catches missing config before it reaches users.
@@ -12,4 +12,5 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const nextConfig = {};
-export default nextConfig;
+
+export default withOutstatic(nextConfig);
