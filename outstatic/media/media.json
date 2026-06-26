@@ -1,0 +1,18 @@
+{
+  "commit": "",
+  "generated": "2026-06-26T19:20:12.154Z",
+  "media": [
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "2186125011",
+        "path": "public/hoot.png"
+      },
+      "alt": "",
+      "filename": "hoot.png",
+      "publishedAt": "2026-06-26T19:20:11.966Z",
+      "source": "hoot",
+      "type": "image"
+    }
+  ]
+}
