@@ -15,73 +15,6 @@ Last updated: 2026-06-25
 
 ---
 
-## 🔴 High Priority
-
-### [BKL-001] Implement PostHog Managed Reverse Proxy
-
-**Title:** Implement PostHog Managed Reverse Proxy for improved event capture
-
-**Description:**
-Enable PostHog's Managed Reverse Proxy (via Cloudflare) to route analytics events through a custom subdomain on askhoot.ai. This bypasses ad blockers and is expected to increase captured events by 10–30%. Include the required legal acknowledgment and update SDK configuration.
-
-**Acceptance Criteria:**
-- [ ] Create managed proxy record in PostHog organization settings using a neutral subdomain (e.g., `e.askhoot.ai` or `ph.askhoot.ai`)
-- [ ] Add corresponding CNAME record in askhoot.ai DNS and confirm propagation + SSL issuance
-- [ ] Update PostHog initialization code (`api_host` points to proxy subdomain; `ui_host` remains PostHog domain)
-- [ ] Verify in browser dev tools that events route through the custom subdomain with 200 responses
-- [ ] Document the change and any monitoring steps in the project repo/wiki
-- [ ] Acknowledge PostHog's Managed Proxy terms (including Cloudflare subprocessor and non-HIPAA note)
-
-**Notes / Dependencies:**
-- Review Cloudflare DNS settings — disable proxy (orange cloud) for the CNAME
-- Test thoroughly before full rollout
-- Related: BKL-002 (Privacy disclaimer), BKL-003 (Privacy policy)
-
----
-
-## 🟡 Medium-High Priority
-
-### [BKL-002] Add User Disclaimer for Sensitive / PHI Data
-
-**Title:** Add user disclaimer warning against inputting PHI / sensitive personal data
-
-**Description:**
-Implement visible warnings that AskHoot is not designed to handle Protected Health Information (PHI) or other sensitive data. Especially important given health-related comparison use cases (e.g., GLP-1 medications vs. diet).
-
-**Acceptance Criteria:**
-- [ ] Draft and approve 1–2 versions of the disclaimer message (short + contextual)
-- [ ] Implement disclaimer in UI (e.g., onboarding modal, persistent note near input, tooltip, or banner)
-- [ ] Include similar language in Terms of Service / Privacy Policy
-- [ ] Test visibility on desktop + mobile
-- [ ] Ensure it does not disrupt user experience
-
-**Notes / Dependencies:**
-- Tone: helpful and non-alarming ("for your privacy and safety…")
-- Consider dynamic display if health-related keywords are detected
-- Related: BKL-001 (PostHog proxy), BKL-003 (Privacy policy)
-
----
-
-### [BKL-003] Update Privacy Policy and Data Handling Docs
-
-**Title:** Update Privacy Policy and internal docs for PII / PHI handling
-
-**Description:**
-Revise privacy-related documentation to clearly address email as PII, prohibition on PHI input, and current data processing (including analytics tools).
-
-**Acceptance Criteria:**
-- [ ] Confirm email address is documented as PII
-- [ ] Add section on prohibited inputs (PHI/sensitive data) and platform limitations (not HIPAA-compliant)
-- [ ] Review and update data retention, sharing, and subprocessor language (PostHog, Cloudflare, Resend, Supabase, etc.)
-- [ ] Publish updated policy and notify users if required
-
-**Notes / Dependencies:**
-- Keep it user-friendly while accurate
-- Can be done in parallel with BKL-002
-- Related: BKL-001 (PostHog proxy), BKL-002 (disclaimer)
-
----
-
 ## 🟢 Medium Priority
 
 ### [BKL-004] Enhanced Option Input Mode (User-Provided Data)
@@ -119,66 +52,6 @@ v1 uses Amazon only (universal). v2 routes by product category: electronics → 
 - Apply to Walmart (Impact Radius) and Target (Impact) affiliate programs
 - Do not pursue truly regional retailers
 - Related: BKL-006 (Amazon Associates application)
-
----
-
-### [BKL-006] Apply to Amazon Associates
-
-**Title:** Submit Amazon Associates application
-
-**Description:**
-Requires a live site with content. The `/about` page now exists. Apply via affiliate-program.amazon.com.
-
-**Acceptance Criteria:**
-- [X] Confirm site has sufficient content and live traffic
-- [X] Submit application
-- [X] Wire `NEXT_PUBLIC_AMAZON_ASSOC_TAG` into production affiliate links
-
-**Notes / Dependencies:**
-- Pre-requisite: live site with real decisions
-- Blocked by: site needs meaningful traffic before approval
-
----
-
-### [BKL-016] SEO Foundation — robots.txt, sitemap.xml, llms.txt
-
-**Title:** Add robots.txt, sitemap, and llms.txt before SEO push
-
-**Description:**
-Prerequisite for any search engine optimization effort. Without these, crawlers index the site arbitrarily and you have no control over what appears in search results or AI training corpora.
-
-**Acceptance Criteria:**
-- [ ] Add `app/robots.ts` (generates `/robots.txt`): allow all crawlers on `/`, `/about`, `/share`; disallow `/history`, `/api`, `/auth`
-- [ ] Add `app/sitemap.ts` (generates `/sitemap.xml`): include `/`, `/about`; exclude dynamic/auth routes
-- [ ] Add `public/llms.txt`: one-paragraph description of AskHoot for AI crawlers (what it does, who it's for, that it's free)
-- [ ] Verify all three are accessible in production at the expected URLs
-- [ ] Submit sitemap to Google Search Console
-
-**Notes / Dependencies:**
-- Next.js 14 App Router has native support for `robots.ts` and `sitemap.ts` — no packages needed
-- `llms.txt` is an emerging convention (not a standard yet) — low effort, useful signal
-- Do this before any link-building or SEO content work
-- Priority: High for SEO readiness
-
----
-
-### [BKL-017] Highlight "Try an Example" Button During Launch Window
-
-**Title:** Make "Try an example" button more visually prominent on Step 1
-
-**Description:**
-The button currently uses a ghost style (no background, gray text, light border) that blends into the label row. During the launch window, users who can't think of a decision to try will drop off — this button is the fix, but they need to see it. A subtle green tint keeps it on-brand.
-
-**Acceptance Criteria:**
-- [ ] Update button style: `background: #E8F5EE`, `color: #2D6A4F`, `border: 1px solid #B7DFC9` — stays secondary but visible
-- [ ] Confirm it doesn't compete with the primary "Build My Decision Matrix" CTA
-- [ ] Test on mobile (button sits in a tight header row)
-- [ ] Revisit after launch — may revert to ghost style once there's enough organic traffic
-
-**Notes / Dependencies:**
-- Currently: `background: none`, `color: #6B6B6B`, `border: 1px solid #E0DBD3`
-- This is a launch-window nudge, not a permanent design decision
-- Priority: Medium-High during launch; Low after
 
 ---
 
@@ -232,50 +105,7 @@ When a user shares a decision result, the recipient lands on a pre-filled or con
 
 **Notes / Dependencies:**
 - Depends on share link infrastructure already existing
-
----
-
-### [BKL-019] Self-Serve Account Deletion Flow
-
-**Title:** Let users delete their own account and data without emailing
-
-**Description:**
-The privacy policy currently directs users to email us for account deletion. This is honest but not scalable and creates a manual support burden. Build a self-serve flow in the user's account settings that deletes their profile, all saved decisions, and their Supabase auth record.
-
-**Acceptance Criteria:**
-- [ ] Add account settings page (or section within history/profile) with a "Delete my account" option
-- [ ] Require explicit confirmation before deletion (e.g., type "DELETE" or a two-step confirm)
-- [ ] Delete all rows in `public.decisions` for the user
-- [ ] Delete the `public.profiles` row
-- [ ] Delete the Supabase auth user record (requires service role key — server-side only)
-- [ ] Sign the user out and redirect to home on completion
-- [ ] Remove contact from Resend audience on deletion
-- [ ] Update privacy policy to reflect self-serve flow once live
-
-**Notes / Dependencies:**
-- Supabase auth user deletion requires the service role key (`SUPABASE_SERVICE_ROLE_KEY`) — never expose this client-side
-- Consider a 7-day grace period / soft delete before hard deletion (backlog decision)
-- Related: BKL-020 (data export)
-
----
-
-### [BKL-020] Data Access and Export Flow
-
-**Title:** Let users request or download a copy of their data
-
-**Description:**
-The privacy policy states users can request a copy of their data, correction of inaccurate data, or deletion. The deletion path will be self-serve (BKL-019). This ticket covers data access and correction — either a self-serve export or a handled request flow.
-
-**Acceptance Criteria:**
-- [ ] Define what "a copy of your data" means for AskHoot: decision history (title, winner, score, date), account email, consent preferences
-- [ ] Option A: self-serve JSON/CSV export from history page (preferred long-term)
-- [ ] Option B: email-based request flow with 30-day SLA (acceptable for now)
-- [ ] Correction path: user can edit decision titles; other corrections handled by email request
-- [ ] Update privacy policy once self-serve export is available
-
-**Notes / Dependencies:**
-- Option B is acceptable at current scale — revisit when user base grows
-- Related: BKL-019 (account deletion)
+- Share UTM tracking now live (`utm_source=share`) so we can measure share→visit volume before building this
 
 ---
 
@@ -291,22 +121,88 @@ Stub exists at `app/api/affiliate/postback/route.ts`. Connect to CPA network pos
 
 ---
 
-## ✅ Completed / In Progress
+### [BKL-019] Self-Serve Account Deletion Flow
 
-### [BKL-010] Pexels API Key — Set in Vercel env vars
-- Status: **Pending** — `PEXELS_API_KEY` still needs to be added to Vercel environment variables
+**Title:** Let users delete their own account and data without emailing
+
+**Description:**
+The privacy policy currently directs users to email for account deletion. Build a self-serve flow that deletes their profile, all saved decisions, and their Supabase auth record.
+
+**Acceptance Criteria:**
+- [ ] Add "Delete my account" option in history/profile area
+- [ ] Require explicit confirmation (two-step or type "DELETE")
+- [ ] Delete all rows in `public.decisions` for the user
+- [ ] Delete the `public.profiles` row
+- [ ] Delete the Supabase auth user record (service role key — server-side only)
+- [ ] Sign the user out and redirect to home
+- [ ] Remove contact from Resend on deletion
+- [ ] Update privacy policy to reflect self-serve flow once live
+
+**Notes / Dependencies:**
+- Supabase auth user deletion requires `SUPABASE_SERVICE_ROLE_KEY` — never expose client-side
+- Related: BKL-020 (data export)
+
+---
+
+### [BKL-020] Data Access and Export Flow
+
+**Title:** Let users request or download a copy of their data
+
+**Description:**
+Covers data access and correction — either a self-serve export or email-based request flow.
+
+**Acceptance Criteria:**
+- [ ] Define scope: decision history (title, winner, score, date), email, consent preferences
+- [ ] Option A: self-serve JSON/CSV export from history page (preferred long-term)
+- [ ] Option B: email-based request with 30-day SLA (acceptable now)
+- [ ] Update privacy policy once self-serve export is available
+
+**Notes / Dependencies:**
+- Option B is acceptable at current scale
+- Related: BKL-019 (account deletion)
+
+---
+
+## ✅ Completed
+
+### [BKL-001] PostHog Managed Reverse Proxy
+- **Done** — Proxy routes through `e.askhoot.ai` via Cloudflare. SDK updated with `api_host`/`ui_host` split. Vercel env vars configured.
+
+### [BKL-002] PHI / Sensitive Data Disclaimer
+- **Done** — Amber callout on `/about` and `/privacy`. Decision: no inline field-level warning (not standard practice; privacy policy is the legal protection).
+
+### [BKL-003] Privacy Policy
+- **Done** — Standalone `/privacy` page live. Plain-English, accurate disclosures for all partners. AI observability disclosure added (decision text does reach PostHog via AI traces). PHI section included. Linked from `/about` footer and sitemap.
+
+### [BKL-006] Amazon Associates
+- **Done** — Tag `askhoot-20` wired into all affiliate links via `NEXT_PUBLIC_AMAZON_ASSOC_TAG`. Site has live traffic and content.
+
+### [BKL-010] Pexels API Key
+- **Pending** — `PEXELS_API_KEY` still needs to be added to Vercel environment variables.
 
 ### [BKL-011] PostHog AI Observability
-- Status: **Done** — `@posthog/ai/anthropic` wrapping all 3 Claude API routes; `decision_id` on all events; `posthog.identify()` on auth
+- **Done** — `@posthog/ai/anthropic` wrapping all 3 Claude API routes. `decision_id` on all events. `posthog.identify()` on auth.
 
-### [BKL-012] `public.profiles` table + marketing consent
-- Status: **Done** — migration applied, trigger auto-creates profiles, `updateMarketingConsent` wired to `applyPendingConsent` in `Analytics.tsx`
+### [BKL-012] `public.profiles` + Marketing Consent
+- **Done** — Migration applied. Trigger auto-creates profiles. `updateMarketingConsent` wired to `applyPendingConsent` in `Analytics.tsx`.
 
 ### [BKL-013] Custom SMTP via Resend
-- Status: **Done** — bypasses Supabase 2 auth emails/hour limit
+- **Done** — Bypasses Supabase 2 auth emails/hour limit.
 
-### [BKL-014] Magic link redirect → askhoot.ai
-- Status: **Done** — Supabase Site URL + Redirect URL updated
+### [BKL-014] Magic Link Redirect → askhoot.ai
+- **Done** — Supabase Site URL and Redirect URL updated.
 
-### [BKL-015] AskHoot rebrand + owl logo
-- Status: **Done** — camelCase branding in all locations; owl in loading state, sign-in modal, history empty state, step 5 winner reveal
+### [BKL-015] AskHoot Rebrand + Owl Logo
+- **Done** — Branding in all locations. Owl in loading state, sign-in modal, history empty state, step 5 winner reveal.
+
+### [BKL-016] SEO Foundation
+- **Done** — `app/robots.ts`, `app/sitemap.ts`, `public/llms.txt` deployed. `/privacy` added to sitemap. Submit `https://askhoot.ai/sitemap.xml` to Google Search Console if not yet done.
+
+### [BKL-017] Highlight "Try an Example" Button
+- **Done** — Button styled with `background: #E8F5EE`, `color: #2D6A4F`, `border: 1px solid #B7DFC9`.
+
+### Resend Email Integration
+- **Done** — `lib/resend.ts`, `/api/resend-contact`, `/api/resend-event`. Fires `user.signed_up` on consent + `decision.completed` on save. Sequence A (welcome + nudge) and Sequence B (follow-up + re-engagement) configured in Resend dashboard.
+
+### Analytics Deep-Dive
+- **Done** — `user_signed_up` (first login detection), `decision_abandoned` (beforeunload with step), `ai_vertical` on `constraint_added` / `preference_added` / `criteria_weight_adjusted`, share UTM params (`utm_source=share`). PostHog dashboard "AskHoot Core Metrics" live with 13 insights.
