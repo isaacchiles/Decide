@@ -34,8 +34,8 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p style={{ fontSize: '15px', color: '#6B6B6B', lineHeight: 1.7, margin: 0 }}>
-            Last updated June 2026. AskHoot is a decision-making tool, not a data business.
-            This page explains what we collect, how we use it, and what we don&apos;t do — in plain English.
+            Last updated June 2026. This page explains what AskHoot collects, how we use it,
+            and what we don&apos;t do — in plain English.
           </p>
         </div>
 
@@ -69,11 +69,18 @@ export default function PrivacyPage() {
 
           <div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 6px' }}>How you use the product</p>
-            <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: 0 }}>
+            <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: '0 0 10px' }}>
               We track behavioral data — which screens you visit, how many options you add, whether
-              you complete a decision. We track counts and actions, not content. We do not send the
-              text of your decisions, constraints, preferences, or option names to our analytics
-              platform.
+              you complete a decision. These events capture counts and actions only. We do not send
+              the text of your decisions, constraints, preferences, or option names to our behavioral
+              analytics platform.
+            </p>
+            <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: 0 }}>
+              Separately, we monitor AI performance using PostHog&apos;s AI observability tools.
+              This captures the prompts sent to Anthropic — which include your decision text,
+              constraints, and preferences — along with response times and token usage, so we can
+              diagnose errors and ensure quality. This data is used for product monitoring only,
+              not for advertising or profiling.
             </p>
           </div>
         </section>
@@ -119,7 +126,7 @@ export default function PrivacyPage() {
             'Sell your personal data to anyone.',
             'Use your decision content to train AI models.',
             'Share your individual decision data with advertisers or third parties.',
-            'Send the text of your decisions, constraints, or preferences to our analytics platform.',
+            'Use your decision content for behavioral analytics, advertising, or user profiling.',
             'Show affiliate links for financial products like mortgages, insurance, or credit cards without a disclosed partner relationship.',
           ].map((item, i) => (
             <div key={i} style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'flex-start' }}>

@@ -130,13 +130,76 @@ v1 uses Amazon only (universal). v2 routes by product category: electronics → 
 Requires a live site with content. The `/about` page now exists. Apply via affiliate-program.amazon.com.
 
 **Acceptance Criteria:**
-- [ ] Confirm site has sufficient content and live traffic
-- [ ] Submit application
-- [ ] Wire `NEXT_PUBLIC_AMAZON_ASSOC_TAG` into production affiliate links
+- [X] Confirm site has sufficient content and live traffic
+- [X] Submit application
+- [X] Wire `NEXT_PUBLIC_AMAZON_ASSOC_TAG` into production affiliate links
 
 **Notes / Dependencies:**
 - Pre-requisite: live site with real decisions
 - Blocked by: site needs meaningful traffic before approval
+
+---
+
+### [BKL-016] SEO Foundation — robots.txt, sitemap.xml, llms.txt
+
+**Title:** Add robots.txt, sitemap, and llms.txt before SEO push
+
+**Description:**
+Prerequisite for any search engine optimization effort. Without these, crawlers index the site arbitrarily and you have no control over what appears in search results or AI training corpora.
+
+**Acceptance Criteria:**
+- [ ] Add `app/robots.ts` (generates `/robots.txt`): allow all crawlers on `/`, `/about`, `/share`; disallow `/history`, `/api`, `/auth`
+- [ ] Add `app/sitemap.ts` (generates `/sitemap.xml`): include `/`, `/about`; exclude dynamic/auth routes
+- [ ] Add `public/llms.txt`: one-paragraph description of AskHoot for AI crawlers (what it does, who it's for, that it's free)
+- [ ] Verify all three are accessible in production at the expected URLs
+- [ ] Submit sitemap to Google Search Console
+
+**Notes / Dependencies:**
+- Next.js 14 App Router has native support for `robots.ts` and `sitemap.ts` — no packages needed
+- `llms.txt` is an emerging convention (not a standard yet) — low effort, useful signal
+- Do this before any link-building or SEO content work
+- Priority: High for SEO readiness
+
+---
+
+### [BKL-017] Highlight "Try an Example" Button During Launch Window
+
+**Title:** Make "Try an example" button more visually prominent on Step 1
+
+**Description:**
+The button currently uses a ghost style (no background, gray text, light border) that blends into the label row. During the launch window, users who can't think of a decision to try will drop off — this button is the fix, but they need to see it. A subtle green tint keeps it on-brand.
+
+**Acceptance Criteria:**
+- [ ] Update button style: `background: #E8F5EE`, `color: #2D6A4F`, `border: 1px solid #B7DFC9` — stays secondary but visible
+- [ ] Confirm it doesn't compete with the primary "Build My Decision Matrix" CTA
+- [ ] Test on mobile (button sits in a tight header row)
+- [ ] Revisit after launch — may revert to ghost style once there's enough organic traffic
+
+**Notes / Dependencies:**
+- Currently: `background: none`, `color: #6B6B6B`, `border: 1px solid #E0DBD3`
+- This is a launch-window nudge, not a permanent design decision
+- Priority: Medium-High during launch; Low after
+
+---
+
+### [BKL-018] Ongoing Engagement Email Sequence for Active Users
+
+**Title:** Post-welcome email flow for users who return and make multiple decisions
+
+**Description:**
+The welcome sequence handles all new users through their first decision and a 2-week re-engagement window. But active users who keep using AskHoot fall out of all email communication after the welcome flow ends. This ticket adds an ongoing engagement sequence for users who have made 2+ decisions and gone quiet for 30 days.
+
+**Acceptance Criteria:**
+- [ ] Define trigger: `decision.completed` where `decisions_count >= 2` + no activity for 30 days
+- [ ] Write re-engagement email (B3) — tone differs from welcome-flow re-engagement; acknowledges they're an experienced user ("You've used AskHoot before — got a big decision coming up?")
+- [ ] Wire trigger in Resend (separate automation from welcome sequence)
+- [ ] Confirm it doesn't fire for users already in the welcome sequence window
+
+**Notes / Dependencies:**
+- Copy should reference their history of use, not treat them as new
+- Consider personalization using `ai_vertical` from last decision (e.g., "Last time you chose between laptops — what's next?")
+- Low urgency until user base is large enough to segment meaningfully
+- Related: BKL-012 (profiles/consent), Resend integration
 
 ---
 
@@ -169,6 +232,50 @@ When a user shares a decision result, the recipient lands on a pre-filled or con
 
 **Notes / Dependencies:**
 - Depends on share link infrastructure already existing
+
+---
+
+### [BKL-019] Self-Serve Account Deletion Flow
+
+**Title:** Let users delete their own account and data without emailing
+
+**Description:**
+The privacy policy currently directs users to email us for account deletion. This is honest but not scalable and creates a manual support burden. Build a self-serve flow in the user's account settings that deletes their profile, all saved decisions, and their Supabase auth record.
+
+**Acceptance Criteria:**
+- [ ] Add account settings page (or section within history/profile) with a "Delete my account" option
+- [ ] Require explicit confirmation before deletion (e.g., type "DELETE" or a two-step confirm)
+- [ ] Delete all rows in `public.decisions` for the user
+- [ ] Delete the `public.profiles` row
+- [ ] Delete the Supabase auth user record (requires service role key — server-side only)
+- [ ] Sign the user out and redirect to home on completion
+- [ ] Remove contact from Resend audience on deletion
+- [ ] Update privacy policy to reflect self-serve flow once live
+
+**Notes / Dependencies:**
+- Supabase auth user deletion requires the service role key (`SUPABASE_SERVICE_ROLE_KEY`) — never expose this client-side
+- Consider a 7-day grace period / soft delete before hard deletion (backlog decision)
+- Related: BKL-020 (data export)
+
+---
+
+### [BKL-020] Data Access and Export Flow
+
+**Title:** Let users request or download a copy of their data
+
+**Description:**
+The privacy policy states users can request a copy of their data, correction of inaccurate data, or deletion. The deletion path will be self-serve (BKL-019). This ticket covers data access and correction — either a self-serve export or a handled request flow.
+
+**Acceptance Criteria:**
+- [ ] Define what "a copy of your data" means for AskHoot: decision history (title, winner, score, date), account email, consent preferences
+- [ ] Option A: self-serve JSON/CSV export from history page (preferred long-term)
+- [ ] Option B: email-based request flow with 30-day SLA (acceptable for now)
+- [ ] Correction path: user can edit decision titles; other corrections handled by email request
+- [ ] Update privacy policy once self-serve export is available
+
+**Notes / Dependencies:**
+- Option B is acceptable at current scale — revisit when user base grows
+- Related: BKL-019 (account deletion)
 
 ---
 
