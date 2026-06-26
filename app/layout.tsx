@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Analytics from '@/components/Analytics';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import SiteFooter from '@/components/SiteFooter';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default function RootLayout({
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
+          <SiteFooter />
         </body>
     </html>
   );
