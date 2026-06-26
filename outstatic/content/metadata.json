@@ -1,11 +1,11 @@
 {
-  "commit": "",
-  "generated": "2026-06-26T19:20:55.240Z",
+  "commit": "d8bda6f06d6eae7b0f00bedeed1cc8a40950cf0c",
+  "generated": "2026-06-26T19:21:10.580Z",
   "metadata": [
     {
       "__outstatic": {
-        "commit": "",
-        "hash": "2474716681",
+        "commit": "d8bda6f06d6eae7b0f00bedeed1cc8a40950cf0c",
+        "hash": "232293424",
         "path": "outstatic/content/posts/the-weighted-decision-matrix-a-complete-guide-with-a-free-tool.mdx"
       },
       "author": {
@@ -15,7 +15,7 @@
       "collection": "posts",
       "publishedAt": "2026-06-26T18:56:11.957Z",
       "slug": "the-weighted-decision-matrix-a-complete-guide-with-a-free-tool",
-      "status": "draft",
+      "status": "published",
       "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
     }
   ]
