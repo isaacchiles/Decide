@@ -164,6 +164,7 @@ export default function AboutPage() {
           <div style={{ display: 'flex', gap: '24px' }}>
             <Link href="/" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none', fontWeight: 500 }}>Home</Link>
             <Link href="/about" style={{ fontSize: '13px', color: '#2D6A4F', textDecoration: 'none', fontWeight: 600 }}>About</Link>
+            <Link href="/privacy" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none', fontWeight: 500 }}>Privacy</Link>
           </div>
         </div>
       </div>
