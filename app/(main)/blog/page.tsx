@@ -2,6 +2,10 @@ import { getDocuments } from 'outstatic/server';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+// Pre-render fully at build time — eliminates Next.js streaming ($RS script)
+// which causes a known Safari null parentNode crash (React PR #34996 / Next.js 15.5.6+)
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'Blog — AskHoot',
   description: 'Thinking clearly about decisions, choices, and how we choose.',

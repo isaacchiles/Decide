@@ -4,6 +4,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+// Pre-render fully at build time — eliminates Next.js streaming ($RS script)
+// which causes a known Safari null parentNode crash (React PR #34996 / Next.js 15.6+)
+export const dynamic = 'force-static';
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
