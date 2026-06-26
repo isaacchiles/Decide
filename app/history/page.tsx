@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { loadDecisions, deleteDecision, type DecisionRecord } from '@/lib/decisions';
+import { trackEvent } from '@/lib/analytics';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -15,9 +16,10 @@ function formatDate(iso: string) {
 }
 
 export default function HistoryPage() {
-  const [decisions, setDecisions] = useState<DecisionRecord[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [deleting, setDeleting]   = useState<string | null>(null);
+  const [decisions, setDecisions]         = useState<DecisionRecord[]>([]);
+  const [loading, setLoading]             = useState(true);
+  const [deleting, setDeleting]           = useState<string | null>(null);
+  const [deleteAccountState, setDeleteAccountState] = useState<'idle' | 'confirm' | 'deleting'>('idle');
   const router = useRouter();
 
   useEffect(() => {
@@ -38,6 +40,20 @@ export default function HistoryPage() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push('/');
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteAccountState('deleting');
+    try {
+      const res = await fetch('/api/delete-account', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      trackEvent('account_deleted');
+      // Auth session is now invalid — redirect to home
+      router.push('/');
+    } catch (err) {
+      console.error('Account deletion error:', err);
+      setDeleteAccountState('confirm'); // stay in confirm so user can retry
+    }
   }
 
   const drafts    = decisions.filter(d => d.status === 'draft');
@@ -200,6 +216,53 @@ export default function HistoryPage() {
             )}
           </div>
         )}
+
+        {/* ── Danger zone ── */}
+        <div style={{ marginTop: '72px', paddingTop: '32px', borderTop: '1px solid #E0DBD3' }}>
+          <h2 style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9B9B9B', fontWeight: 700, margin: '0 0 12px' }}>Account</h2>
+
+          {deleteAccountState === 'idle' && (
+            <button
+              onClick={() => setDeleteAccountState('confirm')}
+              style={{ padding: '9px 18px', background: 'none', border: '1.5px solid #E0DBD3', borderRadius: '20px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#6B6B6B', cursor: 'pointer' }}
+            >
+              Delete my account
+            </button>
+          )}
+
+          {deleteAccountState === 'confirm' && (
+            <div style={{ background: '#FFF5F5', border: '1.5px solid #FEC9C9', borderRadius: '12px', padding: '20px 22px' }}>
+              <p style={{ fontSize: '14px', color: '#1A1A1A', margin: '0 0 6px', fontWeight: 600 }}>Are you sure?</p>
+              <p style={{ fontSize: '13px', color: '#6B6B6B', margin: '0 0 18px', lineHeight: 1.5 }}>
+                This permanently deletes your account and all saved decisions. There&apos;s no undo.
+              </p>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={handleDeleteAccount}
+                  style={{ padding: '9px 20px', background: '#C0392B', color: 'white', border: 'none', borderRadius: '20px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Yes, delete everything
+                </button>
+                <button
+                  onClick={() => setDeleteAccountState('idle')}
+                  style={{ padding: '9px 18px', background: 'none', border: '1.5px solid #E0DBD3', borderRadius: '20px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#6B6B6B', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {deleteAccountState === 'deleting' && (
+            <div style={{ display: 'flex', gap: '7px', alignItems: 'center', padding: '10px 0' }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#C0392B', animation: `pulse 1.4s ease-in-out ${i * 0.22}s infinite` }} />
+              ))}
+              <span style={{ fontSize: '13px', color: '#6B6B6B', marginLeft: '6px' }}>Deleting your account…</span>
+            </div>
+          )}
+        </div>
+
       </div>
 
       <style>{`

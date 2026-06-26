@@ -1,6 +1,6 @@
 # AskHoot — Product Backlog
 
-Last updated: 2026-06-25
+Last updated: 2026-06-26 (Batch 3 shipped 2026-06-26)
 
 ---
 
@@ -12,6 +12,29 @@ Last updated: 2026-06-25
 | 🟡 Medium-High | User-facing; affects trust or conversion |
 | 🟢 Medium | Meaningful improvement, no urgency |
 | ⚪ Low / Parked | Good idea, revisit later |
+
+---
+
+## 🟡 Medium-High Priority
+
+### [BKL-021] Ghost Blog at blog.askhoot.ai
+
+**Title:** Launch visual blog on Ghost Pro before public launch
+
+**Description:**
+Set up Ghost Pro at `blog.askhoot.ai` (subdomain). Write 3–4 posts before going public. Content focus: decision-specific, search-intent-matched pieces ("How to choose between two job offers," "The 7 criteria that matter most when buying a used car"). Natural CTA into the app on each post.
+
+**Acceptance Criteria:**
+- [ ] Ghost Pro account created, connected to `blog.askhoot.ai` via Cloudflare DNS
+- [ ] AskHoot branding applied (logo, colors, custom domain)
+- [ ] 3–4 posts published before public launch
+- [ ] Each post links back to askhoot.ai with a CTA ("Try it free →")
+- [ ] blog.askhoot.ai added to sitemap.xml and resubmitted to Search Console
+
+**Notes / Dependencies:**
+- Ghost Pro at $9/mo — simple, visual, no build work
+- Migrate to headless (Next.js `/blog` route) later if SEO warrants it
+- Content strategy matters more than platform: specific decision topics > generic "about decisions" posts
 
 ---
 
@@ -35,23 +58,20 @@ Last updated: 2026-06-25
 
 ---
 
-### [BKL-005] Multi-Retailer Affiliate Routing (v2)
+### [BKL-005] Multi-Retailer Affiliate Routing (v2) ⚪ PARKED
 
 **Title:** Route affiliate links by product category (Best Buy, Target, Walmart)
 
 **Description:**
 v1 uses Amazon only (universal). v2 routes by product category: electronics → Best Buy/Amazon, home/apparel → Target/Walmart, general → Amazon.
 
-**Acceptance Criteria:**
-- [ ] Implement category detection on decision type
-- [ ] Route to highest-converting affiliate per category
-- [ ] Support "I prefer Walmart/Target" user preference signal
-- [ ] Never show multiple CTA buttons — always a single best link
+**Decision (2026-06-26):** Parked. Amazon is universal and already wired. Target/Walmart require separate applications, SDK changes, and commission rates are comparable or lower. Not worth the complexity until PostHog affiliate click data shows a category converting heavily where Amazon is weak. If that signal appears, the move is Best Buy (electronics), not Target/Walmart.
+
+**Revisit:** Month 6+ with affiliate click data by vertical.
 
 **Notes / Dependencies:**
-- Apply to Walmart (Impact Radius) and Target (Impact) affiliate programs
 - Do not pursue truly regional retailers
-- Related: BKL-006 (Amazon Associates application)
+- Related: BKL-006 (Amazon Associates — done)
 
 ---
 
@@ -101,11 +121,13 @@ These verticals need specific user attributes (age, state, vehicle, income, cred
 **Title:** Create category-primed landing pages for users who arrive via share links
 
 **Description:**
-When a user shares a decision result, the recipient lands on a pre-filled or context-aware page that primes the decision category, reducing drop-off.
+When a user shares a decision result, the recipient lands on a pre-filled or context-aware page that primes the decision category, reducing drop-off. Instead of a cold homepage, they'd see: "Your friend just made a car-buying decision — want to make yours?"
+
+**Note (2026-06-26):** Share tracking IS already live — `utm_source=share` fires in PostHog on every share link click. This ticket is not about tracking; it's about improving conversion of that traffic. Build only when PostHog shows meaningful share→visit volume.
 
 **Notes / Dependencies:**
-- Depends on share link infrastructure already existing
-- Share UTM tracking now live (`utm_source=share`) so we can measure share→visit volume before building this
+- Share UTM tracking already live — check PostHog "AskHoot Core Metrics" for share-driven visits
+- Do not build until share volume justifies it
 
 ---
 
@@ -175,10 +197,10 @@ Covers data access and correction — either a self-serve export or email-based 
 - **Done** — Standalone `/privacy` page live. Plain-English, accurate disclosures for all partners. AI observability disclosure added (decision text does reach PostHog via AI traces). PHI section included. Linked from `/about` footer and sitemap.
 
 ### [BKL-006] Amazon Associates
-- **Done** — Tag `askhoot-20` wired into all affiliate links via `NEXT_PUBLIC_AMAZON_ASSOC_TAG`. Site has live traffic and content.
+- **Done** — Tag `askhoot-20` wired into all affiliate links via `NEXT_PUBLIC_AMAZON_ASSOC_TAG`. `ascsubtag` (decision ID) appended for per-decision attribution.
 
 ### [BKL-010] Pexels API Key
-- **Pending** — `PEXELS_API_KEY` still needs to be added to Vercel environment variables.
+- **Done** — `PEXELS_API_KEY` added to Vercel environment variables.
 
 ### [BKL-011] PostHog AI Observability
 - **Done** — `@posthog/ai/anthropic` wrapping all 3 Claude API routes. `decision_id` on all events. `posthog.identify()` on auth.
@@ -193,7 +215,7 @@ Covers data access and correction — either a self-serve export or email-based 
 - **Done** — Supabase Site URL and Redirect URL updated.
 
 ### [BKL-015] AskHoot Rebrand + Owl Logo
-- **Done** — Branding in all locations. Owl in loading state, sign-in modal, history empty state, step 5 winner reveal.
+- **Done** — Branding in all locations including share card wordmark, body copy, and affiliate disclosure (fixed in Batch 1).
 
 ### [BKL-016] SEO Foundation
 - **Done** — `app/robots.ts`, `app/sitemap.ts`, `public/llms.txt` deployed. `/privacy` added to sitemap. Submit `https://askhoot.ai/sitemap.xml` to Google Search Console if not yet done.
@@ -206,3 +228,33 @@ Covers data access and correction — either a self-serve export or email-based 
 
 ### Analytics Deep-Dive
 - **Done** — `user_signed_up` (first login detection), `decision_abandoned` (beforeunload with step), `ai_vertical` on `constraint_added` / `preference_added` / `criteria_weight_adjusted`, share UTM params (`utm_source=share`). PostHog dashboard "AskHoot Core Metrics" live with 13 insights.
+
+### Code Review 2 — Batch 1 Tightening (CR-103/105/106/111/112/113/116)
+- **Done** — All "Do immediately" items from CODE_REVIEW_2.md shipped in one commit:
+  - CR-103: "decide" literals replaced with "AskHoot"/"askhoot.ai" in share card, body copy, and affiliate disclosure
+  - CR-105: Exact Amazon Associates required phrase added to AffiliateCTA
+  - CR-106: `ascsubtag` appended to all Amazon URLs for decision-level attribution
+  - CR-111: Misleading comment in `lib/profile.ts` corrected to match actual behavior
+  - CR-112: Contribution bars normalized to match headline score math
+  - CR-113: Misleading weight badge removed (normalization renders it meaningless)
+  - CR-116: Dead `/share-debug` allowlist entry removed from `middleware.ts`
+
+### Code Review 2 — Batch 2 Hardening (CR-101/102/107/108)
+- **Done** — All "Do before launch" items shipped; type-check clean. Two manual steps required (see below):
+  - CR-107: `ErrorBoundary` moved to `app/layout.tsx` (wraps `{children}`); removed from `app/page.tsx`. All routes now covered.
+  - CR-108: `CLAUDE.md` refreshed — AskHoot/askhoot.ai, prod URL, all new infra documented, share-debug noted as auth-gated.
+  - CR-102: `app/api/og/route.tsx` now validates the `img` param against a host allowlist (Pexels, Wikimedia, askhoot.ai, `*.supabase.co`); returns 400 otherwise. https-only.
+  - CR-101: `lib/ratelimit.ts` rewritten to a single atomic `increment_api_usage` RPC; explicit **fail-open** policy. New `api_usage_ratelimit_migration.sql` + `BUDGET_ALARM.md`.
+  - ⚠️ **Manual before launch:** (1) run `api_usage_ratelimit_migration.sql` in Supabase SQL editor; (2) set the Anthropic Console spend limit + PostHog alert per `BUDGET_ALARM.md`.
+
+### Batch 3 — Launch Readiness (2026-06-26)
+- **Done** — type-check clean.
+  - **404 page:** `app/not-found.tsx` — AskHoot-branded, "Start a new decision →" CTA, fires `page_not_found` PostHog event with the path so broken URLs are tracked.
+  - **BKL-019 (Account deletion):** Full cascade delete — decisions → profiles → Resend (`user.deleted` event) → Supabase auth user. Two-step confirmation UI in `/history`. Powered by new `app/api/delete-account/route.ts` (service role) and `lib/supabase/admin.ts`.
+  - **Analytics:** Added `page_not_found` and `account_deleted` to `AnalyticsEvent` type.
+
+### Vertical Landing Pages (BKL-022) — v2, Parked
+- `/auto`, `/laptop`, `/credit-card`, etc. — template system for vertical-specific landing pages with pre-filled context fields and SEO copy. Also resolves BKL-007 (financial verticals) as a side effect. **Do not build until blog + share data establishes organic intent signals.**
+
+### Amazon Associates — Confirmed Ready
+- Tag `askhoot-20` wired. Program approved. Amazon reviews performance once meaningful traffic is live — nothing to do but launch.

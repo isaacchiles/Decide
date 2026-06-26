@@ -46,7 +46,9 @@ export type AnalyticsEvent =
   | 'example_cycled'            // user clicked "Try an example" on Screen 1
   | 'affiliate_click'           // user clicked an affiliate CTA (vertical, partner, position)
   | 'user_signed_up'            // first-ever sign-in (created_at within 30 min of SIGNED_IN)
-  | 'decision_abandoned';       // left mid-flow after decision_started but before decision_completed
+  | 'decision_abandoned'        // left mid-flow after decision_started but before decision_completed
+  | 'page_not_found'           // user landed on a URL that doesn't exist
+  | 'account_deleted';         // user completed self-serve account deletion
 
 // ── Property types ───────────────────────────────────────────────────────────
 // Only primitives — never strings that could contain user content.
