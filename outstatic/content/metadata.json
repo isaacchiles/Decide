@@ -1,0 +1,22 @@
+{
+  "commit": "",
+  "generated": "2026-06-26T19:20:55.240Z",
+  "metadata": [
+    {
+      "__outstatic": {
+        "commit": "",
+        "hash": "2474716681",
+        "path": "outstatic/content/posts/the-weighted-decision-matrix-a-complete-guide-with-a-free-tool.mdx"
+      },
+      "author": {
+        "name": "Isaac Chiles",
+        "picture": "/hoot.png/hoot.png"
+      },
+      "collection": "posts",
+      "publishedAt": "2026-06-26T18:56:11.957Z",
+      "slug": "the-weighted-decision-matrix-a-complete-guide-with-a-free-tool",
+      "status": "draft",
+      "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
+    }
+  ]
+}
