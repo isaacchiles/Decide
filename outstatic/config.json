@@ -1,0 +1,15 @@
+{
+  "media": [
+    {
+      "categories": [
+        "image"
+      ],
+      "input": "public",
+      "label": "Hoot",
+      "name": "hoot",
+      "output": "/hoot.png"
+    }
+  ],
+  "publicMediaPath": "hoot.png/",
+  "repoMediaPath": "public/"
+}
