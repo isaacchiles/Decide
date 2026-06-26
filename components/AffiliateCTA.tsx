@@ -70,9 +70,9 @@ export default function AffiliateCTA({ cta, position }: Props) {
         lineHeight:  1.5,
         fontFamily:  "'DM Sans', sans-serif",
       }}>
-        Decide may earn a commission. It never affects your recommendation.
+        AskHoot may earn a commission. It never affects your recommendation.
         {cta.partnerId === 'amazon' && (
-          <> Amazon and the Amazon logo are trademarks of Amazon.com, Inc.</>
+          <> As an Amazon Associate I earn from qualifying purchases.</>
         )}
       </p>
     </div>

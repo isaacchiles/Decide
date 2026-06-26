@@ -179,9 +179,11 @@ export default function DecisionMaker() {
     .sort((a, b) => b.rawScore - a.rawScore);
 
   const winnerScores    = scores[winnerIdx] ?? {};
+  const totalWeightSum  = criteria.reduce((s, c) => s + c.weight, 0) || 1;
   const contribs        = criteria
     .map((c, ci) => {
-      const val = ((winnerScores[ci] ?? 0) / 5) * c.weight;
+      // Use the same normalization as computeOptionScore so bars match the headline score.
+      const val = ((winnerScores[ci] ?? 0) / 5) * (c.weight / totalWeightSum) * 100;
       return { name: c.name, value: val, label: val.toFixed(1) };
     })
     .sort((a, b) => b.value - a.value);
@@ -666,15 +668,6 @@ export default function DecisionMaker() {
 
   // ── Shared style objects ────────────────────────────────────────────────────
 
-  const weightBadgeStyle: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center',
-    padding: '5px 12px', borderRadius: '20px',
-    fontSize: '12px', fontWeight: 700, letterSpacing: '0.02em',
-    background: weightValid ? '#E8F5EE' : '#FDEAEA',
-    color:      weightValid ? '#2D6A4F' : '#C1121F',
-    flexShrink: 0, whiteSpace: 'nowrap',
-  };
-
   const stepProgressStyle: React.CSSProperties = {
     height: '100%', background: '#2D6A4F',
     width: `${(displayStep / 4) * 100}%`,
@@ -1023,7 +1016,6 @@ export default function DecisionMaker() {
                   <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '19px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 4px' }}>Criteria &amp; Weights</h3>
                   <p style={{ fontSize: '12px', color: '#6B6B6B', margin: 0 }}>AI-suggested — adjust to your priorities</p>
                 </div>
-                <div style={weightBadgeStyle}>Total: {totalWeight}%</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
                 {criteria.map((c, i) => (

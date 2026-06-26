@@ -41,7 +41,6 @@ export async function middleware(request: NextRequest) {
     !pathname.startsWith('/auth') &&
     !pathname.startsWith('/api') &&
     !pathname.startsWith('/share') &&
-    !pathname.startsWith('/share-debug') &&
     pathname !== '/_next'
   ) {
     const url = request.nextUrl.clone();
