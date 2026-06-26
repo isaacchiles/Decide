@@ -1,12 +1,19 @@
 import 'outstatic/outstatic.css';
 import { Outstatic } from 'outstatic';
-import { OstClient } from 'outstatic/client';
+import dynamic from 'next/dynamic';
 
 /**
- * Outstatic CMS dashboard — /outstatic
- * Lives in its own (cms) route group so the root layout doesn't interfere.
- * Protected by GitHub OAuth — only repo collaborators can sign in.
+ * Load OstClient client-side only (ssr: false).
+ * The Outstatic dashboard reads localStorage/cookies on mount and uses
+ * next-themes, both of which cause server/client HTML mismatches.
+ * Disabling SSR eliminates the hydration step entirely — the component
+ * is rendered fresh in the browser on every load.
  */
+const OstClient = dynamic(
+  () => import('outstatic/client').then((m) => ({ default: m.OstClient })),
+  { ssr: false }
+);
+
 export default async function Page({
   params,
 }: {
