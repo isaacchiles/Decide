@@ -44,7 +44,9 @@ export type AnalyticsEvent =
   | 'decision_shared'           // user tapped Share My Decision
   | 'template_applied'          // user selected a template on Screen 1
   | 'example_cycled'            // user clicked "Try an example" on Screen 1
-  | 'affiliate_click';          // user clicked an affiliate CTA (vertical, partner, position)
+  | 'affiliate_click'           // user clicked an affiliate CTA (vertical, partner, position)
+  | 'user_signed_up'            // first-ever sign-in (created_at within 30 min of SIGNED_IN)
+  | 'decision_abandoned';       // left mid-flow after decision_started but before decision_completed
 
 // ── Property types ───────────────────────────────────────────────────────────
 // Only primitives — never strings that could contain user content.

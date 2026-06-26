@@ -99,7 +99,23 @@ export default function Analytics() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         posthog.identify(session.user.id, { email: session.user.email });
-        if (event === 'SIGNED_IN') applyPendingConsent();
+        if (event === 'SIGNED_IN') {
+          applyPendingConsent();
+
+          // Detect first-ever sign-in: created_at within the last 30 minutes.
+          // Returning users have a created_at from a previous session (hours/days ago)
+          // so this reliably distinguishes new signups from returning logins.
+          const createdAt  = new Date(session.user.created_at).getTime();
+          const isNewUser  = Date.now() - createdAt < 30 * 60 * 1000;
+          if (isNewUser) {
+            const params = new URLSearchParams(window.location.search);
+            trackEvent('user_signed_up', {
+              utm_source:   params.get('utm_source')   ?? undefined,
+              utm_medium:   params.get('utm_medium')   ?? undefined,
+              utm_campaign: params.get('utm_campaign') ?? undefined,
+            });
+          }
+        }
       } else {
         posthog.reset(); // clear identity on sign-out
       }

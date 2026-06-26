@@ -328,7 +328,7 @@ export default function DecisionMaker() {
     if (v) {
       setConstraints(prev => [...prev, v]);
       setConstraintInput('');
-      trackEvent('constraint_added', { decision_id: decisionId.current, total: constraints.length + 1 });
+      trackEvent('constraint_added', { decision_id: decisionId.current, position: constraints.length + 1, ai_vertical: aiVertical ?? undefined });
     }
   }
 
@@ -337,7 +337,7 @@ export default function DecisionMaker() {
     if (v) {
       setPreferences(prev => [...prev, v]);
       setPreferenceInput('');
-      trackEvent('preference_added', { decision_id: decisionId.current, total: preferences.length + 1 });
+      trackEvent('preference_added', { decision_id: decisionId.current, position: preferences.length + 1, ai_vertical: aiVertical ?? undefined });
     }
   }
 
@@ -362,6 +362,7 @@ export default function DecisionMaker() {
       criterion_index: i,
       new_weight:      value,
       total_weight:    criteria.reduce((s, c, idx) => s + (idx === i ? value : c.weight), 0),
+      ai_vertical:     aiVertical ?? undefined,
     });
   }
 
@@ -504,11 +505,14 @@ export default function DecisionMaker() {
   async function handleShareAction() {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
-    // Build the /share URL — OG meta tags on that page generate the rich card preview
+    // Build the /share URL — OG meta tags on that page generate the rich card preview.
+    // UTM params let us track share-driven visits back to this decision in PostHog.
     const shareParams = new URLSearchParams({
-      winner:   winnerOption?.name ?? '',
-      score:    maxScore.toFixed(0),
-      decision: decision.trim(),
+      winner:       winnerOption?.name ?? '',
+      score:        maxScore.toFixed(0),
+      decision:     decision.trim(),
+      utm_source:   'share',
+      utm_medium:   'sharesheet',
     });
     if (winnerImageUrl) shareParams.set('img', winnerImageUrl);
     const shareUrl  = `${origin}/share?${shareParams.toString()}`;
@@ -690,6 +694,30 @@ export default function DecisionMaker() {
     if (name) trackEvent('screen_viewed', { screen: name });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
+
+  // ── Abandonment tracking ──────────────────────────────────────────────────
+  // Fires decision_abandoned on page unload if the user started a decision
+  // (step > 1) but never reached the results screen (step < 5).
+  // Uses refs so the handler always reads current values without stale closures.
+
+  const abandonRef = useRef({ step: 1, aiVertical: null as string | null });
+  useEffect(() => { abandonRef.current.step = step; }, [step]);
+  useEffect(() => { abandonRef.current.aiVertical = aiVertical; }, [aiVertical]);
+
+  useEffect(() => {
+    function onBeforeUnload() {
+      const { step: s, aiVertical: v } = abandonRef.current;
+      if (s > 1 && s < 5) {
+        trackEvent('decision_abandoned', {
+          decision_id:       decisionId.current,
+          abandoned_at_step: s,
+          ai_vertical:       v ?? undefined,
+        });
+      }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
