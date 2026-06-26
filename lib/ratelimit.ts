@@ -1,25 +1,24 @@
 /**
  * Per-user daily rate limiting via Supabase.
  *
- * Run this migration in your Supabase SQL editor before deploying:
+ * Before deploying, run the migration in `api_usage_ratelimit_migration.sql`
+ * (Supabase → SQL Editor). It creates the `api_usage` table and the atomic
+ * `increment_api_usage(p_endpoint)` RPC this module depends on.
  *
- *   create table if not exists api_usage (
- *     user_id  uuid references auth.users(id) on delete cascade,
- *     endpoint text    not null,
- *     date     date    not null default current_date,
- *     count    integer not null default 0,
- *     primary key (user_id, endpoint, date)
- *   );
- *
- *   alter table api_usage enable row level security;
- *
- *   create policy "users own usage" on api_usage
- *     for all using (auth.uid() = user_id);
+ * Why an RPC: the previous version did a SELECT then a separate INSERT/UPDATE.
+ * Two concurrent requests could both read count=19 and both write 20, letting a
+ * user exceed the cap (TOCTOU race). The RPC does insert-or-increment in a
+ * single statement and returns the new count, so increments are atomic.
  *
  * Daily limits (generous for real use, blocks runaway API abuse):
  *   generate-matrix  → 20/day  (~20 full decisions)
  *   suggest-scores   → 20/day
  *   suggest-options  → 15/day  (~5 decisions × 3 suggests)
+ *
+ * FAIL-OPEN policy: if the DB/RPC errors, we ALLOW the request. A transient
+ * Supabase blip should not block real users. The hard ceiling on total spend
+ * is the global budget alarm (see BUDGET_ALARM.md / Anthropic Console spend
+ * limit), not this per-user counter.
  *
  * To audit: open Supabase table editor → api_usage → filter by date.
  */
@@ -37,43 +36,42 @@ type RateLimitResult =
   | { allowed: false; error: 'rate_limited'; limit: number };
 
 export async function checkAndIncrementLimit(
-  userId: string,
+  _userId: string,
   endpoint: string
 ): Promise<RateLimitResult> {
   const limit = DAILY_LIMITS[endpoint];
   if (!limit) return { allowed: true }; // unknown endpoint — let through
 
-  const supabase = await createClient();
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  try {
+    const supabase = await createClient();
 
-  // Read current count for today
-  const { data: row } = await supabase
-    .from('api_usage')
-    .select('count')
-    .eq('user_id', userId)
-    .eq('endpoint', endpoint)
-    .eq('date', today)
-    .maybeSingle();
-
-  const currentCount = row?.count ?? 0;
-
-  // Reject before writing if already at limit
-  if (currentCount >= limit) {
-    return { allowed: false, error: 'rate_limited', limit };
-  }
-
-  // Increment (insert or update)
-  if (!row) {
-    await supabase.from('api_usage').insert({
-      user_id: userId, endpoint, date: today, count: 1,
+    // Atomic insert-or-increment; returns the NEW count for (user, endpoint, today).
+    // user_id is derived from auth.uid() inside the RPC — not trusted from the client.
+    const { data, error } = await supabase.rpc('increment_api_usage', {
+      p_endpoint: endpoint,
     });
-  } else {
-    await supabase.from('api_usage')
-      .update({ count: currentCount + 1 })
-      .eq('user_id', userId)
-      .eq('endpoint', endpoint)
-      .eq('date', today);
-  }
 
-  return { allowed: true };
+    // FAIL OPEN on any DB error, or if the RPC reports no authenticated user (-1).
+    if (error) {
+      console.error('[ratelimit] RPC error — failing open:', error.message);
+      return { allowed: true };
+    }
+
+    const newCount = typeof data === 'number' ? data : Number(data);
+    if (!Number.isFinite(newCount) || newCount < 0) {
+      // -1 = no auth.uid(), or unexpected payload — fail open.
+      return { allowed: true };
+    }
+
+    // This request is the Nth use today. Allow the first `limit` uses; block beyond.
+    if (newCount > limit) {
+      return { allowed: false, error: 'rate_limited', limit };
+    }
+
+    return { allowed: true };
+  } catch (e) {
+    // Network/throw — fail open.
+    console.error('[ratelimit] unexpected error — failing open:', e);
+    return { allowed: true };
+  }
 }

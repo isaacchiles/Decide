@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Analytics from '@/components/Analytics';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,7 +29,9 @@ export default function RootLayout({
       </head>
       <body>
           <Analytics />
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </body>
     </html>
   );

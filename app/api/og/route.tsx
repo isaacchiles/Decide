@@ -2,12 +2,51 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
+/**
+ * Allowlist of hosts the `img` param may load from. The OG renderer fetches
+ * `img` server-side, so an unvalidated value is an open image proxy / SSRF
+ * vector. We only permit our own image sources:
+ *   - Pexels         (stock photos used on share cards)
+ *   - Wikimedia      (Wikipedia entity/product images, via /api/wiki-image)
+ *   - askhoot.ai     (our own assets: logo, share images)
+ *   - *.supabase.co  (our Supabase Storage public URLs)
+ * A host is allowed if it exactly equals an entry or is a subdomain of one.
+ */
+const ALLOWED_IMG_HOSTS = [
+  'images.pexels.com',
+  'pexels.com',
+  'upload.wikimedia.org',
+  'wikimedia.org',
+  'askhoot.ai',
+  'supabase.co',
+];
+
+function isAllowedImgUrl(raw: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return false; // unparseable
+  }
+  if (url.protocol !== 'https:') return false; // no http/data/file/etc.
+  const host = url.hostname.toLowerCase();
+  return ALLOWED_IMG_HOSTS.some(
+    (allowed) => host === allowed || host.endsWith(`.${allowed}`)
+  );
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const winner   = searchParams.get('winner')   ?? 'My Decision';
   const score    = searchParams.get('score')     ?? '0';
   const decision = searchParams.get('decision')  ?? '';
-  const imgUrl   = searchParams.get('img')       ?? '';
+  const rawImg   = searchParams.get('img')       ?? '';
+
+  // Reject a present-but-disallowed img rather than silently proxying it.
+  if (rawImg && !isAllowedImgUrl(rawImg)) {
+    return new Response('Invalid img host', { status: 400 });
+  }
+  const imgUrl = rawImg;
 
   return new ImageResponse(
     (
