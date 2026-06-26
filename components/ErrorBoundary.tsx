@@ -12,11 +12,23 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    // Known Safari streaming bug (React $RS helper, fixed in Next.js 15.5.6+).
+    // The page renders correctly after React switches to client rendering,
+    // so swallow it silently rather than showing the error UI.
+    const isStreamingCrash =
+      error.message?.includes('removeChild') ||
+      error.message?.includes('parentNode');
+    if (isStreamingCrash) return { error: null };
     return { error };
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error('[ErrorBoundary] caught:', error, info.componentStack);
+    const isStreamingCrash =
+      error.message?.includes('removeChild') ||
+      error.message?.includes('parentNode');
+    if (!isStreamingCrash) {
+      console.error('[ErrorBoundary] caught:', error, info.componentStack);
+    }
   }
 
   render() {
