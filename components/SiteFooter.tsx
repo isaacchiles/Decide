@@ -20,7 +20,7 @@ export default function SiteFooter() {
       <Link href="/blog"    style={{ color: '#6B6B6B', textDecoration: 'none' }}>Blog</Link>
       <Link href="/about"   style={{ color: '#6B6B6B', textDecoration: 'none' }}>About</Link>
       <Link href="/privacy" style={{ color: '#6B6B6B', textDecoration: 'none' }}>Privacy</Link>
-      <span style={{ color: '#C0B8B0' }}>© {new Date().getFullYear()} AskHoot</span>
+      <span style={{ color: '#C0B8B0' }} suppressHydrationWarning>© {new Date().getFullYear()} AskHoot</span>
     </footer>
   );
 }
