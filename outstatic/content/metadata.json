@@ -1,6 +1,6 @@
 {
-  "commit": "4bfa2cee8059a4d661c20c205c6d60cfdacefeca",
-  "generated": "2026-06-27T11:35:17.811Z",
+  "commit": "49f5ca94ae882241d57beb15ac5085425523c1a3",
+  "generated": "2026-06-27T11:36:06.970Z",
   "metadata": [
     {
       "__outstatic": {
@@ -53,6 +53,24 @@
       "slug": "how-to-choose-decision-criteria",
       "status": "draft",
       "title": "How to Choose Decision Criteria (Without Fooling Yourself)"
+    },
+    {
+      "__outstatic": {
+        "commit": "49f5ca94ae882241d57beb15ac5085425523c1a3",
+        "hash": "3867225128",
+        "path": "outstatic/content/posts/weighted-matrix-vs-pros-and-cons.mdx"
+      },
+      "author": {
+        "name": "Hoot the Unflappable is AskHoot's Chief Decision Owl ",
+        "picture": ""
+      },
+      "collection": "posts",
+      "coverImage": "",
+      "description": "A pros-and-cons list is fast; a weighted decision matrix is fairer when it matters. The two blind spots of pros-and-cons lists — and when to use each.",
+      "publishedAt": "2026-07-10T12:00:00.000Z",
+      "slug": "weighted-matrix-vs-pros-and-cons",
+      "status": "draft",
+      "title": "Weighted Matrix vs. a Pros-and-Cons List: Which Should You Use?"
     }
   ]
 }
