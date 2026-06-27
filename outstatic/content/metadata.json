@@ -1,6 +1,6 @@
 {
-  "commit": "75ef768012fcf99f7232d61e2cb302b60ee90271",
-  "generated": "2026-06-27T11:37:33.279Z",
+  "commit": "ddeff8ca0964b2597b0a8f0c7a7df909f5dfbc5a",
+  "generated": "2026-06-27T11:43:27.007Z",
   "metadata": [
     {
       "__outstatic": {
@@ -17,24 +17,6 @@
       "slug": "the-weighted-decision-matrix-a-complete-guide-with-a-free-tool",
       "status": "published",
       "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
-    },
-    {
-      "__outstatic": {
-        "commit": "4bfa2cee8059a4d661c20c205c6d60cfdacefeca",
-        "hash": "2437554089",
-        "path": "outstatic/content/posts/how-to-choose-decision-criteria.mdx"
-      },
-      "author": {
-        "name": "Hoot the Unflappable is AskHoot's Chief Decision Owl",
-        "picture": ""
-      },
-      "collection": "posts",
-      "coverImage": "",
-      "description": "The factors you judge a decision on can make or break the outcome. How to choose decision criteria that are distinct, directional, and honest — and the trap to avoid.",
-      "publishedAt": "2026-07-08T12:00:00.000Z",
-      "slug": "how-to-choose-decision-criteria",
-      "status": "draft",
-      "title": "How to Choose Decision Criteria (Without Fooling Yourself)"
     },
     {
       "__outstatic": {
@@ -89,6 +71,24 @@
       "slug": "weighted-decision-matrix-guide",
       "status": "published",
       "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
+    },
+    {
+      "__outstatic": {
+        "commit": "ddeff8ca0964b2597b0a8f0c7a7df909f5dfbc5a",
+        "hash": "4059411687",
+        "path": "outstatic/content/posts/how-to-choose-decision-criteria.mdx"
+      },
+      "author": {
+        "name": "Hoot the Unflappable is AskHoot's Chief Decision Owl",
+        "picture": ""
+      },
+      "collection": "posts",
+      "coverImage": "",
+      "description": "The factors you judge a decision on can make or break the outcome. How to choose decision criteria that are distinct, directional, and honest — and the trap to avoid.",
+      "publishedAt": "2026-07-08T12:00:00.000Z",
+      "slug": "how-to-choose-decision-criteria",
+      "status": "draft",
+      "title": "How to Choose Decision Criteria (Without Fooling Yourself)"
     }
   ]
 }
