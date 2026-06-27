@@ -1,6 +1,6 @@
 {
-  "commit": "ddeff8ca0964b2597b0a8f0c7a7df909f5dfbc5a",
-  "generated": "2026-06-27T11:43:27.007Z",
+  "commit": "1ddec2bc7312dc4ae5f1f152278a542a415cb5a4",
+  "generated": "2026-06-27T11:43:52.988Z",
   "metadata": [
     {
       "__outstatic": {
@@ -17,24 +17,6 @@
       "slug": "the-weighted-decision-matrix-a-complete-guide-with-a-free-tool",
       "status": "published",
       "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
-    },
-    {
-      "__outstatic": {
-        "commit": "49f5ca94ae882241d57beb15ac5085425523c1a3",
-        "hash": "3867225128",
-        "path": "outstatic/content/posts/weighted-matrix-vs-pros-and-cons.mdx"
-      },
-      "author": {
-        "name": "Hoot the Unflappable is AskHoot's Chief Decision Owl ",
-        "picture": ""
-      },
-      "collection": "posts",
-      "coverImage": "",
-      "description": "A pros-and-cons list is fast; a weighted decision matrix is fairer when it matters. The two blind spots of pros-and-cons lists — and when to use each.",
-      "publishedAt": "2026-07-10T12:00:00.000Z",
-      "slug": "weighted-matrix-vs-pros-and-cons",
-      "status": "draft",
-      "title": "Weighted Matrix vs. a Pros-and-Cons List: Which Should You Use?"
     },
     {
       "__outstatic": {
@@ -89,6 +71,24 @@
       "slug": "how-to-choose-decision-criteria",
       "status": "draft",
       "title": "How to Choose Decision Criteria (Without Fooling Yourself)"
+    },
+    {
+      "__outstatic": {
+        "commit": "1ddec2bc7312dc4ae5f1f152278a542a415cb5a4",
+        "hash": "818059267",
+        "path": "outstatic/content/posts/weighted-matrix-vs-pros-and-cons.mdx"
+      },
+      "author": {
+        "name": "Hoot the Unflappable is AskHoot's Chief Decision Owl ",
+        "picture": ""
+      },
+      "collection": "posts",
+      "coverImage": "",
+      "description": "A pros-and-cons list is fast; a weighted decision matrix is fairer when it matters. The two blind spots of pros-and-cons lists — and when to use each.",
+      "publishedAt": "2026-07-10T12:00:00.000Z",
+      "slug": "weighted-matrix-vs-pros-and-cons",
+      "status": "draft",
+      "title": "Weighted Matrix vs. a Pros-and-Cons List: Which Should You Use?"
     }
   ]
 }
