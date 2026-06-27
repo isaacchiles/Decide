@@ -1,6 +1,6 @@
 {
-  "commit": "656ca31e3b400fa1d1ef058d78de131035338931",
-  "generated": "2026-06-27T10:57:54.379Z",
+  "commit": "4faca8ff1c7d42fe1f1663532460fe3f344a60a9",
+  "generated": "2026-06-27T11:10:12.314Z",
   "metadata": [
     {
       "__outstatic": {
@@ -20,8 +20,8 @@
     },
     {
       "__outstatic": {
-        "commit": "656ca31e3b400fa1d1ef058d78de131035338931",
-        "hash": "2780544663",
+        "commit": "4faca8ff1c7d42fe1f1663532460fe3f344a60a9",
+        "hash": "3288394711",
         "path": "outstatic/content/posts/weighted-decision-matrix-guide.mdx"
       },
       "author": {
@@ -33,7 +33,7 @@
       "description": "What a weighted decision matrix is and how to build one step by step — choose criteria, set weights, score your options. With two worked examples and a free tool that does the math.",
       "publishedAt": "2026-07-06T00:00:00.000Z",
       "slug": "weighted-decision-matrix-guide",
-      "status": "published",
+      "status": "draft",
       "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
     }
   ]
