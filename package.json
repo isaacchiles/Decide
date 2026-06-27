@@ -21,6 +21,7 @@
     "posthog-node": "^5.38.5",
     "react": "^18",
     "react-dom": "^18",
+    "remark-gfm": "^4.0.1",
     "resend": "^6.14.0"
   },
   "devDependencies": {
