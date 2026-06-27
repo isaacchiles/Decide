@@ -1,6 +1,6 @@
 {
-  "commit": "383f26966fe4f145f23b1fa18923fcf4bdca80eb",
-  "generated": "2026-06-27T11:36:44.959Z",
+  "commit": "75ef768012fcf99f7232d61e2cb302b60ee90271",
+  "generated": "2026-06-27T11:37:33.279Z",
   "metadata": [
     {
       "__outstatic": {
@@ -15,24 +15,6 @@
       "collection": "posts",
       "publishedAt": "2026-06-26T18:56:11.957Z",
       "slug": "the-weighted-decision-matrix-a-complete-guide-with-a-free-tool",
-      "status": "published",
-      "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
-    },
-    {
-      "__outstatic": {
-        "commit": "ab70af91607f3ba6c6acc148135d5a6de18c1742",
-        "hash": "2780544663",
-        "path": "outstatic/content/posts/weighted-decision-matrix-guide.mdx"
-      },
-      "author": {
-        "name": "Isaac Chiles",
-        "picture": ""
-      },
-      "collection": "posts",
-      "coverImage": "",
-      "description": "What a weighted decision matrix is and how to build one step by step — choose criteria, set weights, score your options. With two worked examples and a free tool that does the math.",
-      "publishedAt": "2026-07-06T00:00:00.000Z",
-      "slug": "weighted-decision-matrix-guide",
       "status": "published",
       "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
     },
@@ -89,6 +71,24 @@
       "slug": "way-out-of-analysis-paralysis",
       "status": "draft",
       "title": "A Structured Way Out of Analysis Paralysis"
+    },
+    {
+      "__outstatic": {
+        "commit": "75ef768012fcf99f7232d61e2cb302b60ee90271",
+        "hash": "2569572998",
+        "path": "outstatic/content/posts/weighted-decision-matrix-guide.mdx"
+      },
+      "author": {
+        "name": "Hoot the Unflappable is AskHoot's Chief Decision Owl ",
+        "picture": ""
+      },
+      "collection": "posts",
+      "coverImage": "",
+      "description": "What a weighted decision matrix is and how to build one step by step — choose criteria, set weights, score your options. With two worked examples and a free tool that does the math.",
+      "publishedAt": "2026-06-26T12:00:00.000Z",
+      "slug": "weighted-decision-matrix-guide",
+      "status": "published",
+      "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
     }
   ]
 }
