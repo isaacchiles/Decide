@@ -1,5 +1,6 @@
 import { getDocumentBySlug, getDocumentPaths } from 'outstatic/server';
 import { MDXRemote } from 'next-mdx-remote/rsc';
+import remarkGfm from 'remark-gfm';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -61,6 +62,10 @@ export default async function BlogPost({ params }: Props) {
         .prose blockquote { border-left: 3px solid #52B788; padding-left: 1.25em; margin: 1.5em 0; color: #555; font-style: italic; }
         .prose code { background: #F0EDE8; padding: 2px 6px; border-radius: 4px; font-size: 14px; }
         .prose hr { border: none; border-top: 1px solid #E0DBD3; margin: 2.5em 0; }
+        .prose table { width: 100%; border-collapse: collapse; margin: 1.5em 0; font-size: 15px; }
+        .prose th { background: #F0EDE8; font-weight: 600; text-align: left; padding: 10px 14px; border: 1px solid #E0DBD3; }
+        .prose td { padding: 10px 14px; border: 1px solid #E0DBD3; vertical-align: top; }
+        .prose tr:nth-child(even) td { background: #FDFCFA; }
       `}</style>
 
       {/* Header */}
@@ -98,7 +103,7 @@ export default async function BlogPost({ params }: Props) {
 
         {/* Body */}
         <div className="prose">
-          <MDXRemote source={post.content ?? ''} />
+          <MDXRemote source={post.content ?? ''} options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }} />
         </div>
 
         {/* CTA */}
