@@ -8,14 +8,17 @@ import { notFound } from 'next/navigation';
 // which causes a known Safari null parentNode crash (React PR #34996 / Next.js 15.6+)
 export const dynamic = 'force-static';
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: { slug: string } };
 
 export async function generateStaticParams() {
-  return getDocumentPaths('posts');
+  // Outstatic v2 getDocumentPaths returns Pages-Router-style { params: { slug } }
+  // but App Router generateStaticParams expects { slug } — unwrap manually.
+  const paths = getDocumentPaths('posts') as Array<{ params: { slug: string } }>;
+  return paths.map((p) => ({ slug: p.params.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug } = params;
   const post = getDocumentBySlug('posts', slug, ['title', 'description', 'coverImage']);
   if (!post) return {};
   return {
@@ -36,7 +39,7 @@ function formatDate(dateStr: string) {
 }
 
 export default async function BlogPost({ params }: Props) {
-  const { slug } = await params;
+  const { slug } = params;
   const post = getDocumentBySlug('posts', slug, [
     'title', 'publishedAt', 'description', 'coverImage', 'content', 'status',
   ]);
