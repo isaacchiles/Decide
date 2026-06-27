@@ -1,6 +1,6 @@
 {
-  "commit": "49f5ca94ae882241d57beb15ac5085425523c1a3",
-  "generated": "2026-06-27T11:36:06.970Z",
+  "commit": "383f26966fe4f145f23b1fa18923fcf4bdca80eb",
+  "generated": "2026-06-27T11:36:44.959Z",
   "metadata": [
     {
       "__outstatic": {
@@ -71,6 +71,24 @@
       "slug": "weighted-matrix-vs-pros-and-cons",
       "status": "draft",
       "title": "Weighted Matrix vs. a Pros-and-Cons List: Which Should You Use?"
+    },
+    {
+      "__outstatic": {
+        "commit": "383f26966fe4f145f23b1fa18923fcf4bdca80eb",
+        "hash": "412030796",
+        "path": "outstatic/content/posts/way-out-of-analysis-paralysis.mdx"
+      },
+      "author": {
+        "name": "Hoot the Unflappable is AskHoot's Chief Decision Owl",
+        "picture": ""
+      },
+      "collection": "posts",
+      "coverImage": "",
+      "description": "Stuck overthinking a decision? The way out isn't more thinking — it's structure. Cut the options, name what matters, set a deadline, and let a simple method weigh it.",
+      "publishedAt": "2026-07-13T12:00:00.000Z",
+      "slug": "way-out-of-analysis-paralysis",
+      "status": "draft",
+      "title": "A Structured Way Out of Analysis Paralysis"
     }
   ]
 }
