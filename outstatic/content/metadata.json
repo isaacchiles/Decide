@@ -1,6 +1,6 @@
 {
-  "commit": "d8bda6f06d6eae7b0f00bedeed1cc8a40950cf0c",
-  "generated": "2026-06-26T19:21:10.580Z",
+  "commit": "656ca31e3b400fa1d1ef058d78de131035338931",
+  "generated": "2026-06-27T10:57:54.379Z",
   "metadata": [
     {
       "__outstatic": {
@@ -15,6 +15,24 @@
       "collection": "posts",
       "publishedAt": "2026-06-26T18:56:11.957Z",
       "slug": "the-weighted-decision-matrix-a-complete-guide-with-a-free-tool",
+      "status": "published",
+      "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
+    },
+    {
+      "__outstatic": {
+        "commit": "656ca31e3b400fa1d1ef058d78de131035338931",
+        "hash": "2780544663",
+        "path": "outstatic/content/posts/weighted-decision-matrix-guide.mdx"
+      },
+      "author": {
+        "name": "Isaac Chiles",
+        "picture": ""
+      },
+      "collection": "posts",
+      "coverImage": "",
+      "description": "What a weighted decision matrix is and how to build one step by step — choose criteria, set weights, score your options. With two worked examples and a free tool that does the math.",
+      "publishedAt": "2026-07-06T00:00:00.000Z",
+      "slug": "weighted-decision-matrix-guide",
       "status": "published",
       "title": "The Weighted Decision Matrix: A Complete Guide (with a free tool)"
     }
