@@ -220,6 +220,19 @@ export default function DecisionDetailPage() {
           </div>
         </div>
 
+        {/* Re-run button */}
+        <div style={{ marginBottom: '24px' }}>
+          <button
+            onClick={() => router.push(`/?rerun=${decision.id}`)}
+            style={{ width: '100%', padding: '14px', background: 'white', color: '#2D6A4F', border: '1.5px solid #2D6A4F', borderRadius: '24px', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+            Re-run this decision
+          </button>
+        </div>
+
         {/* All options ranked */}
         <div style={{ marginBottom: '28px' }}>
           <h3 style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B6B6B', fontWeight: 700, margin: '0 0 12px' }}>All Options</h3>

@@ -134,19 +134,34 @@ export default function DecisionMaker() {
   // saves overwrite the draft row rather than creating a duplicate.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const resumeId = new URLSearchParams(window.location.search).get('resume');
-    if (!resumeId) return;
+    const params = new URLSearchParams(window.location.search);
+    const resumeId = params.get('resume');
+    const rerunId  = params.get('rerun');
 
-    getDecision(resumeId).then(saved => {
-      if (!saved || saved.status !== 'draft') return;
-      decisionId.current = saved.id;
-      setDecision(saved.title ?? '');
-      setConstraints(saved.constraints ?? []);
-      setPreferences(saved.preferences ?? []);
-      setSavedId(saved.id);
-      // Remove the ?resume param without a navigation so the URL is clean
-      window.history.replaceState({}, '', '/');
-    });
+    if (resumeId) {
+      getDecision(resumeId).then(saved => {
+        if (!saved || saved.status !== 'draft') return;
+        decisionId.current = saved.id;
+        setDecision(saved.title ?? '');
+        setConstraints(saved.constraints ?? []);
+        setPreferences(saved.preferences ?? []);
+        setSavedId(saved.id);
+        window.history.replaceState({}, '', '/');
+      });
+    }
+
+    if (rerunId) {
+      getDecision(rerunId).then(saved => {
+        if (!saved) return;
+        // Load criteria + options from the saved decision, but clear scores
+        // so the user re-scores from scratch. New decision ID for this run.
+        setDecision(saved.title ?? '');
+        if (saved.criteria?.length)  setCriteria(saved.criteria.map((c: { name: string; weight: number; rationale?: string }) => ({ name: c.name, weight: c.weight, rationale: c.rationale ?? '' })));
+        if (saved.options?.length)   setOptions(saved.options.map((o: { name: string; source?: string }) => ({ name: o.name, source: o.source ?? 'You' })));
+        setStep(3);
+        window.history.replaceState({}, '', '/');
+      });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1015,6 +1030,13 @@ export default function DecisionMaker() {
                 <div>
                   <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '19px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 4px' }}>Criteria &amp; Weights</h3>
                   <p style={{ fontSize: '12px', color: '#6B6B6B', margin: 0 }}>AI-suggested — adjust to your priorities</p>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: 800, color: totalWeight === 100 ? '#2D6A4F' : totalWeight > 100 ? '#DC2626' : '#9B9B9B', lineHeight: 1 }}>{totalWeight}</span>
+                  <span style={{ fontSize: '12px', color: '#9B9B9B', marginLeft: '2px' }}>/&nbsp;100</span>
+                  <p style={{ fontSize: '11px', color: totalWeight === 100 ? '#52B788' : totalWeight > 100 ? '#DC2626' : '#9B9B9B', margin: '2px 0 0', fontWeight: 600 }}>
+                    {totalWeight === 100 ? 'Perfect ✓' : totalWeight > 100 ? `${totalWeight - 100} over` : `${100 - totalWeight} to go`}
+                  </p>
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
