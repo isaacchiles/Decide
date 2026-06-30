@@ -26,10 +26,12 @@ export default function AffiliateCTA({ cta, position }: Props) {
         rel="sponsored noopener noreferrer"
         onClick={() =>
           trackEvent('affiliate_click', {
-            vertical:    cta.vertical,
-            partner:     cta.partnerId,
+            vertical:  cta.vertical,
+            partner:   cta.partnerId,
             position,
-            sub_id:      cta.subId,
+            sub_id:    cta.subId,
+            item:      cta.winnerName,
+            item_url:  cta.href,
           })
         }
         style={{

@@ -21,11 +21,12 @@ export type Vertical =
   | 'unknown';
 
 export type AffiliateCTA = {
-  vertical:  Vertical;
-  partnerId: string;    // e.g. 'amazon'
-  label:     string;    // button text
-  href:      string;    // fully-built outbound URL incl. tag + subId context
-  subId:     string;    // decision ID for attribution
+  vertical:   Vertical;
+  partnerId:  string;    // e.g. 'amazon'
+  label:      string;    // button text
+  href:       string;    // fully-built outbound URL incl. tag + subId context
+  subId:      string;    // decision ID for attribution
+  winnerName: string;    // the option that won — for analytics
 };
 
 // ── Partner registry ──────────────────────────────────────────────────────────
@@ -157,9 +158,10 @@ export function resolveAffiliate(args: {
 
   return {
     vertical,
-    partnerId: partner.partnerId,
-    label:     partner.label,
-    href:      partner.buildUrl(args.winnerName, args.subId),
-    subId:     args.subId,
+    partnerId:  partner.partnerId,
+    label:      partner.label,
+    href:       partner.buildUrl(args.winnerName, args.subId),
+    subId:      args.subId,
+    winnerName: args.winnerName,
   };
 }
