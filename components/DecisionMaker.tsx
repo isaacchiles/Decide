@@ -755,6 +755,12 @@ export default function DecisionMaker() {
             </div>
             <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
               <button
+                onClick={() => router.push('/blog')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9B9B9B', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, padding: 0, letterSpacing: '0.01em' }}
+              >
+                Blog
+              </button>
+              <button
                 onClick={() => router.push('/about')}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9B9B9B', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, padding: 0, letterSpacing: '0.01em' }}
               >

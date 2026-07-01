@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { decision, constraints, preferences, decision_id, trace_id } = await req.json();
-    const model = 'claude-sonnet-4-6';
+    const model = 'claude-sonnet-5';
 
     const prompt = `You are a decision-making assistant helping someone make a clear, structured decision.
 
@@ -56,7 +56,7 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
 
     const message = await (client.messages.create as Function)({
       model,
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [{ role: 'user', content: prompt }],
       ...(posthogServer ? {
         posthogDistinctId: user.id,

@@ -41,8 +41,8 @@ Return ONLY valid JSON, no other text:
 { "options": [{ "name": "string" }, { "name": "string" }] }`;
 
     const message = await (client.messages.create as Function)({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 256,
+      model: 'claude-sonnet-5',
+      max_tokens: 512,
       messages: [{ role: 'user', content: prompt }],
       ...(posthogServer ? {
         posthogDistinctId: user.id,
