@@ -93,6 +93,7 @@ Return ONLY valid JSON with no other text, markdown, or explanation:
     return NextResponse.json(data);
   } catch (err: unknown) {
     console.error('generate-matrix error:', err);
+    if (err instanceof Error) posthogServer?.captureException(err, user.id);
     // Use typed Anthropic SDK errors — branch on .status, not message strings
     if (err instanceof Anthropic.APIError) {
       if (err.status === 402) return NextResponse.json({ error: 'credits_exhausted' }, { status: 402 });

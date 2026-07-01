@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import posthog from 'posthog-js';
 
 type Props = { children: React.ReactNode };
 type State = { error: Error | null };
@@ -28,6 +29,9 @@ export default class ErrorBoundary extends React.Component<Props, State> {
       error.message?.includes('parentNode');
     if (!isStreamingCrash) {
       console.error('[ErrorBoundary] caught:', error, info.componentStack);
+      // Surface real crashes in PostHog Error Tracking — at launch scale,
+      // Vercel logs alone aren't enough to notice/triage what users are hitting.
+      posthog?.captureException?.(error, { componentStack: info.componentStack });
     }
   }
 

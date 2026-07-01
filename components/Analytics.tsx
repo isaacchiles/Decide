@@ -40,9 +40,25 @@ export default function Analytics() {
       // Respect Do Not Track browser setting
       respect_dnt: true,
 
-      // Session recordings are off by default.
-      // Enable in PostHog dashboard only after reviewing what's on screen.
-      disable_session_recording: true,
+      // Session recordings: ON for the LinkedIn launch (2026-07) so we can see
+      // where real users get stuck, beyond what discrete events tell us.
+      // Inputs are masked by default (maskAllInputs) so free-text decision/
+      // constraint/preference text is NEVER captured in a replay — this keeps
+      // us consistent with the "never track user content" rule in lib/analytics.ts.
+      disable_session_recording: false,
+      session_recording: {
+        maskAllInputs: true,
+        // '*' masks ALL rendered text, not just <input>/<textarea> fields.
+        // Necessary because decision content (AI-generated criteria names,
+        // rationales, option names, results) is rendered as plain text
+        // throughout the app, not just typed into inputs — a narrower
+        // selector would leak it into replays. This trades away seeing
+        // *what* users typed/saw in exchange for still seeing *where* they
+        // click, scroll, rage-click, and drop off — which is what we
+        // actually need pre-launch. Matches the privacy policy's promise
+        // that behavioral analytics never carries decision content.
+        maskTextSelector: '*',
+      },
 
       // Don't send feature flag requests on init — reduces noise
       advanced_disable_decide: false,

@@ -77,6 +77,7 @@ Example format:
     return NextResponse.json({ scores: validated });
   } catch (err: unknown) {
     console.error('suggest-scores error:', err);
+    if (err instanceof Error) posthogServer?.captureException(err, user.id);
     if (err instanceof Anthropic.APIError) {
       if (err.status === 402) return NextResponse.json({ error: 'credits_exhausted', scores: {} }, { status: 402 });
       if (err.status === 429 || err.status === 529) return NextResponse.json({ error: 'overloaded', scores: {} }, { status: 503 });

@@ -64,6 +64,7 @@ Return ONLY valid JSON, no other text:
     return NextResponse.json({ options });
   } catch (err: unknown) {
     console.error('suggest-options error:', err);
+    if (err instanceof Error) posthogServer?.captureException(err, user.id);
     if (err instanceof Anthropic.APIError) {
       if (err.status === 402) return NextResponse.json({ error: 'credits_exhausted', options: [] }, { status: 402 });
       if (err.status === 429 || err.status === 529) return NextResponse.json({ error: 'overloaded', options: [] }, { status: 503 });
