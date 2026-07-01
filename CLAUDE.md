@@ -1,5 +1,8 @@
 # AskHoot — AI-powered weighted decision maker
 
+> **Read this file first, every session.** Multiple threads work on this repo
+> over time with no shared memory — see "Multi-model orchestration" below.
+
 User describes a decision, adds constraints/preferences, Claude generates weighted
 criteria, the user scores options, and AskHoot returns a ranked recommendation.
 Product-vertical decisions surface an Amazon Associates affiliate CTA.
@@ -7,8 +10,8 @@ Product-vertical decisions surface an Amazon Associates affiliate CTA.
 ## Stack
 - Next.js 14 App Router + TypeScript
 - Supabase (magic link auth + Postgres + RLS)
-- Anthropic Claude Sonnet 4.6
-- PostHog (product analytics + AI observability via `@posthog/ai/anthropic`)
+- Anthropic Claude Sonnet 5
+- PostHog (product analytics + session replay + error tracking + AI observability via `@posthog/ai/anthropic`)
 - Resend (transactional/lifecycle email automations)
 - Amazon Associates (affiliate program)
 - Vercel (production: https://askhoot.ai)
@@ -20,9 +23,9 @@ Product-vertical decisions surface an Amazon Associates affiliate CTA.
 ### UI / pages
 - `components/DecisionMaker.tsx` — all 5-screen UI (input, loading, matrix, scoring, results)
 - `components/AffiliateCTA.tsx` — affiliate button + Amazon Associates disclosure
-- `components/ErrorBoundary.tsx` — app-wide crash boundary (mounted in `app/layout.tsx`)
+- `components/ErrorBoundary.tsx` — app-wide crash boundary (mounted in `app/layout.tsx`); reports to PostHog Error Tracking
 - `components/SignInModal.tsx` — magic-link sign-in
-- `components/Analytics.tsx` — browser PostHog init + post-auth profile sync
+- `components/Analytics.tsx` — browser PostHog init (events + session replay) + post-auth profile sync
 - `app/history/page.tsx` — saved decisions list
 - `app/history/[id]/page.tsx` — decision detail + share
 - `app/share/page.tsx` — OG tag page for iMessage/social previews
@@ -44,7 +47,7 @@ Product-vertical decisions surface an Amazon Associates affiliate CTA.
 - `lib/decisions.ts` — Supabase CRUD (saveDraft / saveDecision / loadDecisions / getDecision / deleteDecision)
 - `lib/affiliate.ts` — PARTNERS registry, Vertical types, resolveVertical / resolveAffiliate
 - `lib/analytics.ts` — PostHog event wrappers + event catalogue
-- `lib/posthog-server.ts` — server-side PostHog singleton (captures `$ai_generation`)
+- `lib/posthog-server.ts` — server-side PostHog singleton (captures `$ai_generation`, exception reports)
 - `lib/resend.ts` — Resend client singleton (server-only; needs `RESEND_API_KEY`)
 - `lib/profile.ts` — helpers for the `public.profiles` table (marketing consent, plan)
 - `lib/ratelimit.ts` — per-user daily API rate limiting via Supabase
@@ -67,6 +70,22 @@ Product-vertical decisions surface an Amazon Associates affiliate CTA.
 **Never commit from the sandbox. Always give terminal commands for Isaac to run.**
 (Previous sessions had commits stuck local-only and Vercel never deployed. Always
 `git push origin main` after committing.)
+
+## Multi-model orchestration
+Multiple threads work on this repo across separate sessions with no shared
+memory. This file (current-state snapshot) and `CHANGELOG.md` (append-only
+history) are the sync protocol:
+
+1. **Before starting work**, read this file plus the top few `CHANGELOG.md`
+   entries to pick up what changed recently.
+2. **Before ending a session**, if you changed something structural — model
+   version, a new/removed route, a new env var, a schema change, a stack
+   swap — update the relevant section of this file *in the same commit*.
+3. **Every shipped change** gets one entry in `CHANGELOG.md` (newest on top),
+   even if this file doesn't need touching.
+4. `BACKLOG.md` is forward-looking (not done yet); this file is current state;
+   `CHANGELOG.md` is what already happened. Don't let backlog items linger
+   here as if they're shipped, and don't let shipped changes go unlogged.
 
 ## Backlog (post-MVP)
 - Rename/retitle saved decisions

@@ -40,6 +40,20 @@ Set up Ghost Pro at `blog.askhoot.ai` (subdomain). Write 3–4 posts before goin
 
 ## 🟢 Medium Priority
 
+### [BKL-023] Share Sheet Image Quality
+
+**Title:** Improve the image used when a decision is shared (iMessage/social preview)
+
+**Description:**
+The OG image generated for shared decisions isn't producing great pictures — Isaac flagged this
+as a known problem (2026-07-01). Not urgent, deprioritized until after the LinkedIn launch push.
+
+**Notes / Dependencies:**
+- Related: `app/api/og/route.tsx`, `app/share/page.tsx`
+- Needs investigation — unclear yet if it's a source-image, layout, or generation-quality issue
+
+---
+
 ### [BKL-004] Enhanced Option Input Mode (User-Provided Data)
 
 **Title:** Add structured input mode for decisions with private user data (e.g., job offers)
