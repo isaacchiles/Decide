@@ -75,6 +75,18 @@ export default function PrivacyPage() {
               the text of your decisions, constraints, preferences, or option names to our behavioral
               analytics platform.
             </p>
+            <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: '0 0 10px' }}>
+              We also use session replay to see how people navigate the product — where they click,
+              scroll, or get stuck — so we can fix confusing parts of the flow. All text on the page
+              is redacted before a replay is recorded, so a replay never shows the content of your
+              decisions, constraints, preferences, or results, even though it shows layout and
+              navigation.
+            </p>
+            <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: '0 0 10px' }}>
+              We may occasionally show a short, optional survey in the product — for example,
+              asking what stopped you if you didn&apos;t finish a decision. Survey responses are
+              free text you choose to write and submit; you can always skip them.
+            </p>
             <p style={{ fontSize: '15px', color: '#4A4A4A', lineHeight: 1.75, margin: 0 }}>
               Separately, we monitor AI performance using PostHog&apos;s AI observability tools.
               This captures the prompts sent to Anthropic — which include your decision text,
@@ -100,7 +112,7 @@ export default function PrivacyPage() {
           {[
             { name: 'Supabase', role: 'Stores your account and decision data.' },
             { name: 'Anthropic', role: 'Processes your decision text to generate AI recommendations. Your content is subject to Anthropic\'s usage policies.' },
-            { name: 'PostHog', role: 'Tracks behavioral analytics — counts and actions only, not decision content.' },
+            { name: 'PostHog', role: 'Tracks behavioral analytics, redacted-text session replay, error monitoring, and optional in-product surveys — counts, actions, and layout only, not decision content unless you choose to share it in a survey response.' },
             { name: 'Resend', role: 'Sends transactional and marketing emails. Only receives your email address, and only fires marketing emails if you\'ve opted in.' },
             { name: 'Amazon', role: 'We participate in the Amazon Associates affiliate program. If you click an affiliate link, Amazon may set a cookie as part of their standard affiliate tracking. No personal data beyond the click is shared.' },
           ].map(({ name, role }) => (
