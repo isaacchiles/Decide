@@ -40,7 +40,7 @@ Set up Ghost Pro at `blog.askhoot.ai` (subdomain). Write 3–4 posts before goin
 
 ## 🔴 High Priority
 
-### [BKL-024] Server-side idempotency for Resend `user.signed_up` event
+### [BKL-024] Server-side idempotency for Resend `user.signed_up` event — ✅ FIXED (code), migration pending
 
 **Title:** Prevent duplicate welcome emails via a server-side "already notified" check
 
@@ -53,13 +53,16 @@ magic-link redirect shapes — added a same-tab guard (`useRef`) as a stopgap, b
 a second browser tab (e.g. magic link opens in a new tab while the original stays open) independently
 reading `askhoot_marketing_consent` from localStorage before either clears it.
 
-**Fix:** add a `profiles.welcome_email_sent_at` (or similar) column. In `app/api/resend-contact/route.ts`,
-check-and-set that column before calling `resendClient.events.send()` — only fire if it was previously
-null. This is the actually-bulletproof fix since it's server-side and per-user, immune to any client-side
-race (multi-tab, retries, etc.).
+**Fix (shipped 2026-07-02):** Added `profiles.welcome_email_sent_at` + an atomic `claim_welcome_email(uuid)`
+RPC (single conditional `UPDATE ... WHERE welcome_email_sent_at IS NULL`) — see
+`welcome_email_idempotency_migration.sql`. `app/api/resend-contact/route.ts` calls the RPC before sending;
+only the request that wins the atomic claim sends the event. Server-side and per-user, immune to any
+client-side race (multi-tab, retries, etc.).
 
 **Notes / Dependencies:**
-- Requires a Supabase migration (new column on `profiles`)
+- ⚠️ Requires Isaac to run `welcome_email_idempotency_migration.sql` in the Supabase SQL editor before
+  this is live — code fails open (logs + sends anyway) until then, so it's safe to deploy either order,
+  but the fix does nothing until the migration runs.
 - Related: `lib/profile.ts`, `app/api/resend-contact/route.ts`, `components/Analytics.tsx`
 
 ---

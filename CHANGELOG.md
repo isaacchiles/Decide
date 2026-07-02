@@ -18,6 +18,25 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
 
 ---
 
+## 2026-07-02 — BKL-024: server-side idempotency for welcome email (closes cross-tab race)
+- Added `welcome_email_sent_at timestamptz` to `profiles` (see
+  `welcome_email_idempotency_migration.sql` — Isaac needs to run this in the
+  Supabase SQL editor before this ships) plus an atomic RPC,
+  `claim_welcome_email(p_user_id)`, that does a single conditional
+  `UPDATE ... WHERE welcome_email_sent_at IS NULL RETURNING true`.
+- `app/api/resend-contact/route.ts` now calls this RPC before sending
+  `user.signed_up` — only the request that wins the atomic claim actually
+  sends the event; a losing concurrent request (e.g. the magic link opening
+  a second tab) gets `null` back and skips sending entirely.
+- This closes the gap the `useRef` guard in `Analytics.tsx` (2026-07-02,
+  below) couldn't: that guard only prevented a double-fire *within one tab*.
+  The real duplicate-welcome-email bug was two tabs independently reading
+  the same `askhoot_marketing_consent` localStorage flag — a client-side
+  guard can't fix that; this database-level compare-and-swap can.
+- Fails open: if the RPC errors (e.g. migration not yet run), the route logs
+  and falls through to send anyway rather than silently dropping the welcome
+  email for everyone.
+
 ## 2026-07-02 — Fixed duplicate decision.completed firing (two /events/send, no email)
 - Isaac found two `/events/send` log entries in a row for the same decision
   completion, with no email ever sent by the follow-up workflow for either.

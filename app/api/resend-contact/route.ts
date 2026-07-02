@@ -26,6 +26,25 @@ export async function POST(req: Request) {
   // Only fire for consenting users — declined users never enter the automation.
   if (!consent) return NextResponse.json({ ok: true });
 
+  // BKL-024: server-side idempotency claim. claim_welcome_email() is an atomic
+  // conditional UPDATE (profiles.welcome_email_sent_at null -> now()) — if two
+  // requests race (e.g. a magic link opening in a second tab), the database
+  // guarantees only one of them gets `true` back. The loser skips sending
+  // instead of firing a second user.signed_up event. Closes the cross-tab
+  // race that the useRef guard in Analytics.tsx couldn't (see CHANGELOG.md).
+  const { data: claimed, error: claimError } = await supabase.rpc('claim_welcome_email', {
+    p_user_id: user.id,
+  });
+
+  if (claimError) {
+    // Fail open: if the RPC itself errors (e.g. migration not yet run), don't
+    // block the welcome email entirely — log and fall through to send as before.
+    console.error('claim_welcome_email error:', claimError);
+  } else if (!claimed) {
+    // Another request already claimed this — welcome email already sent/sending.
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
   try {
     await resendClient.events.send({
       event: 'user.signed_up',

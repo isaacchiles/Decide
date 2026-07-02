@@ -20,8 +20,9 @@ export default function Analytics() {
   // Does NOT protect against a second browser tab (e.g. the magic link
   // opening in a new tab while the original stays open) independently
   // reading the same localStorage flag before either clears it — that
-  // residual race is the more likely cause of the duplicate welcome email
-  // and needs a server-side idempotency check (see BACKLOG BKL-024).
+  // residual race is closed server-side instead, via the atomic
+  // claim_welcome_email() RPC in app/api/resend-contact/route.ts (BKL-024,
+  // shipped 2026-07-02 — see CHANGELOG.md).
   const consentApplied = useRef(false);
 
   useEffect(() => {
