@@ -115,6 +115,18 @@ export default function DecisionMaker() {
   const [scores, setScores] = useState<Scores>(DEMO_SCORES);
   const [scoringLoading, setScoringLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Synchronous in-flight guard for handleSave(). `saving` state alone isn't
+  // enough — React state updates aren't applied synchronously, so two
+  // near-simultaneous calls to handleSave() can both read the stale
+  // `saving === false` before the first call's setSaving(true) has flushed,
+  // letting both through. A ref updates immediately, closing that gap.
+  const savingRef = useRef(false);
+  // Tracks which decisionId has already fired its completion save + Resend
+  // event, so revisiting step 5 (back/forward nav) doesn't refire either.
+  // Deliberately separate from `savedId` — the resume-draft flow (below)
+  // sets `savedId` before step 5 is ever reached, so reusing it here would
+  // incorrectly skip the real completion save for resumed drafts.
+  const completedFiredRef = useRef<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
@@ -407,6 +419,8 @@ export default function DecisionMaker() {
   function restart() {
     trackEvent('decision_restarted');
     decisionId.current = crypto.randomUUID(); // fresh ID for the next decision
+    savingRef.current = false; // allow the next decision to auto-save
+    completedFiredRef.current = null;
     setStep(1);
     setLoadingStep(0);
     setCriteria(DEMO_CRITERIA);
@@ -428,7 +442,11 @@ export default function DecisionMaker() {
   }
 
   async function handleSave() {
-    if (saving) return;
+    // Already saved+fired for this decision — revisiting step 5 (e.g. via
+    // back/forward navigation) must not re-save or re-fire decision.completed.
+    if (completedFiredRef.current === decisionId.current) return;
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     setSaveError(false);
 
@@ -445,7 +463,12 @@ export default function DecisionMaker() {
     });
 
     setSaving(false);
+    // Reset the in-flight guard on failure so a manual retry (the error
+    // notice's onClick) can actually run. On success we deliberately leave
+    // it true — the savedId check above is now the guard for that case.
+    if (!ok) savingRef.current = false;
     if (ok) {
+      completedFiredRef.current = decisionId.current;
       setSavedId(decisionId.current);
       trackEvent('decision_saved', {
         decision_id:  decisionId.current,

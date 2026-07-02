@@ -18,6 +18,27 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
 
 ---
 
+## 2026-07-02 — Fixed duplicate decision.completed firing (two /events/send, no email)
+- Isaac found two `/events/send` log entries in a row for the same decision
+  completion, with no email ever sent by the follow-up workflow for either.
+- Found two real bugs in `handleSave()` (`DecisionMaker.tsx`), both fixed:
+  1. The in-flight guard used `saving` (React state), which isn't
+     synchronous — two near-simultaneous calls could both read the stale
+     `saving === false` before the first call's `setSaving(true)` flushed,
+     letting both through. Replaced with `savingRef` (a ref, updates
+     immediately).
+  2. No guard existed against `handleSave()` re-running for an
+     *already-completed* decision — revisiting step 5 (back/forward nav)
+     would re-save and re-fire `decision.completed` every time. Added
+     `completedFiredRef`, keyed by decisionId, deliberately kept separate
+     from `savedId` — the resume-draft flow sets `savedId` before step 5 is
+     ever reached, so reusing it for this guard would have incorrectly
+     skipped the real completion save for resumed drafts.
+- This doesn't rule out the Resend workflow structure issue flagged earlier
+  (redundant "Wait for event" node) — both could be true. Worth re-testing
+  the follow-up email now that the double-fire is fixed, since it's possible
+  the workflow was simply never getting a single clean trigger to work with.
+
 ## 2026-07-02 — Email automation bugs found (duplicate welcome email + follow-up not firing)
 - Root cause of duplicate "You're In" email: `updateMarketingConsent()` fires
   `/api/resend-contact` → `resend.events.send('user.signed_up')` with no
