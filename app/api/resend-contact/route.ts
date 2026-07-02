@@ -32,15 +32,31 @@ export async function POST(req: Request) {
   // guarantees only one of them gets `true` back. The loser skips sending
   // instead of firing a second user.signed_up event. Closes the cross-tab
   // race that the useRef guard in Analytics.tsx couldn't (see CHANGELOG.md).
-  const { data: claimed, error: claimError } = await supabase.rpc('claim_welcome_email', {
-    p_user_id: user.id,
-  });
+  //
+  // Wrapped in try/catch (not just checking the returned `error` field) —
+  // if the migration hasn't been run yet, the RPC target doesn't exist, and
+  // some client versions throw for that rather than resolving to {error}.
+  // An uncaught throw here would kill the whole request before it ever
+  // reaches events.send() below — silently dropping the welcome email with
+  // no contact created and no visible error. Real bug hit 2026-07-02: two
+  // new signups got no welcome email and never appeared in Resend's
+  // Audience at all, with no error surfaced anywhere.
+  let claimed = true;
+  try {
+    const { data, error: claimError } = await supabase.rpc('claim_welcome_email', {
+      p_user_id: user.id,
+    });
+    if (claimError) {
+      console.error('claim_welcome_email error:', claimError);
+    } else {
+      claimed = Boolean(data);
+    }
+  } catch (err) {
+    // Fail open: RPC missing/errored (e.g. migration not yet run) — still send.
+    console.error('claim_welcome_email threw:', err);
+  }
 
-  if (claimError) {
-    // Fail open: if the RPC itself errors (e.g. migration not yet run), don't
-    // block the welcome email entirely — log and fall through to send as before.
-    console.error('claim_welcome_email error:', claimError);
-  } else if (!claimed) {
+  if (!claimed) {
     // Another request already claimed this — welcome email already sent/sending.
     return NextResponse.json({ ok: true, skipped: true });
   }

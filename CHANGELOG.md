@@ -18,6 +18,25 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
 
 ---
 
+## 2026-07-02 — HOTFIX: welcome email + Resend contact silently not firing at all
+- Isaac hit this live: 2 new signups, zero welcome emails, and neither appeared
+  in Resend's Audience — no visible error anywhere.
+- Root cause: the BKL-024 change below added a `supabase.rpc('claim_welcome_email')`
+  call that wasn't wrapped in try/catch — only the returned `{error}` field was
+  checked. If the migration hasn't been run in Supabase yet, the RPC target
+  doesn't exist, and depending on client behavior that can throw instead of
+  resolving gracefully — killing the whole request before it ever reached
+  `resendClient.events.send()`. Fully silent: no contact created, no email,
+  no error surfaced.
+- Fix: wrapped the RPC call itself in try/catch (not just the returned error
+  field) in `app/api/resend-contact/route.ts`, defaulting `claimed = true` so
+  any RPC failure mode — missing function, thrown exception, or returned
+  error — always fails open and still sends. This route can no longer be
+  fully killed by the idempotency check underneath it.
+- Isaac: still worth confirming `welcome_email_idempotency_migration.sql` has
+  actually been run in Supabase — this fix makes the failure mode harmless,
+  but the idempotency protection itself only kicks in once the migration exists.
+
 ## 2026-07-02 — BKL-024: server-side idempotency for welcome email (closes cross-tab race)
 - Added `welcome_email_sent_at timestamptz` to `profiles` (see
   `welcome_email_idempotency_migration.sql` — Isaac needs to run this in the
