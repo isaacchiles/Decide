@@ -65,11 +65,12 @@ const PARTNERS: Partial<Record<Vertical, PartnerConfig>> = {
 // Template IDs are defined in lib/templates.ts. Add new entries as templates grow.
 
 const TEMPLATE_VERTICALS: Partial<Record<string, Vertical>> = {
-  laptop:      'product',
-  car:         'auto',
-  baby:        'product', // car seat
-  'smart-home': 'product', // smart light bulbs
-  // home (hidden), job, city → 'unknown' (no affiliate partner in v1)
+  laptop:        'product',
+  car:           'auto',
+  baby:          'product', // car seat
+  'smart-home':  'product', // smart light bulbs
+  'robot-vacuum': 'product',
+  // home (hidden), job (hidden), city → 'unknown' (no affiliate partner in v1)
 };
 
 // ── Keyword fallback ───────────────────────────────────────────────────────────

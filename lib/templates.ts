@@ -97,6 +97,29 @@ export const TEMPLATES: Template[] = [
       'Strong engineering culture',
       'Mission I care about',
     ],
+    // Hidden 2026-07-02: this use case isn't built out (no enhanced
+    // option-input for user-provided offer details — see BACKLOG BKL-004)
+    // and doesn't map to an Amazon affiliate outcome. Swapped for Robot
+    // Vacuum, a much higher-research, high-affiliate-fit category. Kept
+    // rather than deleted — job/career decisions are still a content pillar.
+    hidden: true,
+  },
+  {
+    id: 'robot-vacuum',
+    emoji: '🧹',
+    name: 'Robot Vacuum',
+    description: 'Cut through the feature list and find the right one for your home',
+    decision: 'I need to buy a robot vacuum',
+    constraints: [
+      'Under $500',
+      'Works well on both carpet and hardwood',
+      'Strong pet hair pickup',
+    ],
+    preferences: [
+      'Self-emptying base',
+      'Smart mapping / no-go zones',
+      'Quiet enough to run while I work from home',
+    ],
   },
   {
     id: 'city',

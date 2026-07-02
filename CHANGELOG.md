@@ -30,6 +30,10 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
 - Added one more constraint + one more preference to each of the 8 rotating
   "Try an example" sets — modeling slightly richer input to nudge users toward
   sharing more detail, without turning the examples into a wall of text
+- Hid Job Offer template and added Robot Vacuum in its place — job offers
+  aren't built out (needs enhanced option-input, see BACKLOG BKL-004) and have
+  no affiliate outcome; robot vacuums are high-research, high-affiliate-fit,
+  and map cleanly to weighted criteria. Job kept (hidden) as a content pillar.
 
 ## 2026-07-02 — HOTFIX: "Could not parse AI response" on generate-matrix
 - Root cause: Sonnet 5 has adaptive thinking on by default, so a `thinking`
