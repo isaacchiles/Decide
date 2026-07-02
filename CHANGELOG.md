@@ -18,6 +18,33 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
 
 ---
 
+## 2026-07-02 — ROLLED BACK: "consent via redirect URL" welcome email fix
+- Deployed, then Isaac tested again and it didn't work — `welcome_email_sent_at`
+  still null. Reverted commit `7b38e7a` (`git revert --no-edit 7b38e7a`) to
+  restore the last confirmed-working state (`3ae9040`).
+- The underlying diagnosis (localStorage doesn't survive a magic link opened
+  on a different device/browser) is very likely still correct — the fix
+  itself broke something, or the URL never reached `/auth/callback` intact.
+  Leading suspect, NOT YET CONFIRMED: Supabase's Redirect URL allowlist
+  (Authentication → URL Configuration → Redirect URLs) may only match
+  `https://askhoot.ai/auth/callback` as an exact/wildcard string that
+  doesn't account for the appended `?consent=true` query param — if so,
+  Supabase could silently reject or rewrite the redirect, meaning the
+  callback route never saw a valid `code`+`consent` pair together.
+  Also unconfirmed: whether `claim_welcome_email` exists as an actual
+  function in Supabase (Database → Functions) vs. only the column having
+  been added — the migration file has two separate statement blocks and
+  it's possible only the first ran.
+- lib/resendWelcome.ts, the shared send helper, is still in the repo
+  (unused by the reverted callback change, still used by
+  app/api/resend-contact/route.ts... NO — revert restores route.ts to its
+  pre-refactor state too, so resendWelcome.ts is currently orphaned/unused
+  after this revert. Fine to leave in place for the next attempt, or
+  delete — not urgent either way.
+- Next step before re-attempting: confirm the two suspects above directly
+  in the Supabase dashboard, THEN retry the redirect-URL approach with that
+  confirmed. Don't re-ship blind a second time.
+
 ## 2026-07-02 — Real fix: welcome email flow no longer depends on localStorage
 - Root cause of the silent no-welcome-email bug, found via live DevTools
   testing with Isaac: the consent flag traveled from `SignInModal.tsx` to
