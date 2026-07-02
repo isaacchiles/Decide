@@ -18,6 +18,19 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
 
 ---
 
+## 2026-07-02 — HOTFIX: "Could not parse AI response" on generate-matrix
+- Root cause: Sonnet 5 has adaptive thinking on by default, so a `thinking`
+  content block can precede the `text` block in the response. All 3 AI routes
+  (`generate-matrix`, `suggest-scores`, `suggest-options`) assumed the text was
+  always `message.content[0]`, so any response starting with a thinking block
+  returned an empty string and failed JSON parsing — even though Claude had
+  answered correctly (confirmed via PostHog LLM trace: HTTP 200, valid JSON
+  output, but our own code discarded it before parsing)
+- Fix: find the first block with `type === 'text'` instead of assuming index 0
+- Live since the Sonnet 5 migration (2026-07-01) — non-deterministic failure
+  rate depending on whether Claude decided to think first, which is why it
+  wasn't caught immediately. Isaac hit it live via a real generate-matrix call.
+
 ## 2026-07-01 — PostHog MCP connected + launch prep executed directly
 - Connected PostHog MCP (mcp.posthog.com) — Claude can now query/create insights,
   alerts, feature flags, surveys, dashboards directly instead of writing manual steps

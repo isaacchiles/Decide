@@ -59,7 +59,12 @@ Example format:
       } : {}),
     }) as Anthropic.Message;
 
-    const text = message.content[0]?.type === 'text' ? message.content[0].text : '';
+    // Sonnet 5 has adaptive thinking on by default, so the text block is not
+    // always content[0] — a thinking block can precede it. Find the first
+    // text block instead of assuming position 0 (root cause of the
+    // "Could not parse AI response" bug seen post-Sonnet-5-migration).
+    const textBlock = message.content.find((b) => b.type === 'text');
+    const text = textBlock && textBlock.type === 'text' ? textBlock.text : '';
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No JSON in response');
 
