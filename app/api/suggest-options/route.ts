@@ -43,6 +43,11 @@ Return ONLY valid JSON, no other text:
     const message = await (client.messages.create as Function)({
       model: 'claude-sonnet-5',
       max_tokens: 512,
+      // Sonnet 5 defaults to adaptive thinking; disabled here for latency —
+      // this is a short structured-JSON task on a live loading screen, and
+      // thinking tokens add wait time without a clear quality payoff. See
+      // CHANGELOG.md 2026-07-02. Revisit if we want to A/B quality later.
+      thinking: { type: 'disabled' },
       messages: [{ role: 'user', content: prompt }],
       ...(posthogServer ? {
         posthogDistinctId: user.id,

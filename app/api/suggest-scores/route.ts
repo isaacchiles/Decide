@@ -33,6 +33,11 @@ export async function POST(request: Request) {
     const message = await (anthropic.messages.create as Function)({
       model: 'claude-sonnet-5',
       max_tokens: 2048,
+      // Sonnet 5 defaults to adaptive thinking; disabled here for latency —
+      // this is a short structured-JSON task on a live loading screen, and
+      // thinking tokens add wait time without a clear quality payoff. See
+      // CHANGELOG.md 2026-07-02. Revisit if we want to A/B quality later.
+      thinking: { type: 'disabled' },
       messages: [
         {
           role: 'user',

@@ -30,6 +30,11 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
 - Live since the Sonnet 5 migration (2026-07-01) — non-deterministic failure
   rate depending on whether Claude decided to think first, which is why it
   wasn't caught immediately. Isaac hit it live via a real generate-matrix call.
+- Follow-up decision: disabled adaptive thinking (`thinking: {type: "disabled"}`)
+  on all 3 AI routes. Isaac noticed materially longer wait times testing Sonnet 5
+  vs. 4.6 and prioritized latency on this live-loading-screen path over the
+  unproven quality upside of thinking on short structured-JSON tasks. Revisit
+  later — can re-enable per-route to A/B quality once there's room to test.
 
 ## 2026-07-01 — PostHog MCP connected + launch prep executed directly
 - Connected PostHog MCP (mcp.posthog.com) — Claude can now query/create insights,
