@@ -45,33 +45,6 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
   in the Supabase dashboard, THEN retry the redirect-URL approach with that
   confirmed. Don't re-ship blind a second time.
 
-## 2026-07-02 — Real fix: welcome email flow no longer depends on localStorage
-- Root cause of the silent no-welcome-email bug, found via live DevTools
-  testing with Isaac: the consent flag traveled from `SignInModal.tsx` to
-  the post-auth code via `localStorage`, which is scoped per-browser.
-  Confirmed via a controlled test: `/api/resend-contact` fired successfully
-  in the *original* tab (via Supabase's cross-tab auth-state sync), not the
-  new tab the magic link opened in — proving the mechanism works only when
-  the same browser storage is available on both ends. A user who signs up
-  on one device/browser and opens the magic link on another (phone email
-  client, an email app's in-app browser, etc. — a routine way people open
-  email links, not an edge case) would get a fully silent failure: no
-  error, no Resend contact, no email, ever.
-- Fix: `consent` now travels in the magic link's `emailRedirectTo` query
-  string (`?consent=true/false`) instead of localStorage — Supabase
-  preserves this URL regardless of what device/browser opens it.
-  `app/auth/callback/route.ts` reads it and fires the welcome email
-  server-side, right after `exchangeCodeForSession()` succeeds — this is
-  now the PRIMARY, reliable path.
-- Extracted the send logic (profile upsert + BKL-024 atomic claim + Resend
-  send) into `lib/resendWelcome.ts` (`fireWelcomeEmailIfConsented()`),
-  shared by both `app/auth/callback/route.ts` (primary) and
-  `app/api/resend-contact/route.ts` (client-triggered fallback, kept for
-  same-browser flows / consent changes after signup). Safe to call from
-  both — the atomic DB claim means only one caller ever actually sends.
-- `Analytics.tsx`'s localStorage-based consent flow is left in place as a
-  same-browser fallback but is no longer load-bearing.
-
 ## 2026-07-02 — HOTFIX: welcome email + Resend contact silently not firing at all
 - Isaac hit this live: 2 new signups, zero welcome emails, and neither appeared
   in Resend's Audience — no visible error anywhere.

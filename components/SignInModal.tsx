@@ -28,19 +28,11 @@ export default function SignInModal() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    // Persist consent so Analytics.tsx can pick it up as a same-browser
-    // fallback (see below) — but the PRIMARY path is the `consent` query
-    // param on emailRedirectTo, which Supabase preserves on the magic link
-    // regardless of what device/browser opens it. localStorage doesn't
-    // cross devices, which was silently dropping welcome emails for anyone
-    // who opened the link somewhere other than where they signed up
-    // (2026-07-02 — see lib/resendWelcome.ts).
+    // Persist consent so Analytics.tsx can pick it up after the magic link redirect
     localStorage.setItem('askhoot_marketing_consent', String(marketingConsent));
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?consent=${marketingConsent}`,
-      },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
     setLoading(false);
     if (error) setError(error.message);
