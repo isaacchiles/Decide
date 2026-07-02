@@ -38,6 +38,32 @@ Set up Ghost Pro at `blog.askhoot.ai` (subdomain). Write 3–4 posts before goin
 
 ---
 
+## 🔴 High Priority
+
+### [BKL-024] Server-side idempotency for Resend `user.signed_up` event
+
+**Title:** Prevent duplicate welcome emails via a server-side "already notified" check
+
+**Description:**
+Isaac hit a real duplicate-welcome-email bug (2026-07-02). Root cause: `updateMarketingConsent()` in
+`lib/profile.ts` fires `/api/resend-contact` (→ `resend.events.send('user.signed_up', ...)`) with no
+idempotency check, every time it's called. `applyPendingConsent()` in `Analytics.tsx` is deliberately
+called from two listeners (initial `getUser()` and `onAuthStateChange` SIGNED_IN) to cover both
+magic-link redirect shapes — added a same-tab guard (`useRef`) as a stopgap, but that doesn't cover
+a second browser tab (e.g. magic link opens in a new tab while the original stays open) independently
+reading `askhoot_marketing_consent` from localStorage before either clears it.
+
+**Fix:** add a `profiles.welcome_email_sent_at` (or similar) column. In `app/api/resend-contact/route.ts`,
+check-and-set that column before calling `resendClient.events.send()` — only fire if it was previously
+null. This is the actually-bulletproof fix since it's server-side and per-user, immune to any client-side
+race (multi-tab, retries, etc.).
+
+**Notes / Dependencies:**
+- Requires a Supabase migration (new column on `profiles`)
+- Related: `lib/profile.ts`, `app/api/resend-contact/route.ts`, `components/Analytics.tsx`
+
+---
+
 ## 🟢 Medium Priority
 
 ### [BKL-023] Share Sheet Image Quality

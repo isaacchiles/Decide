@@ -18,6 +18,32 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
 
 ---
 
+## 2026-07-02 — Email automation bugs found (duplicate welcome email + follow-up not firing)
+- Root cause of duplicate "You're In" email: `updateMarketingConsent()` fires
+  `/api/resend-contact` → `resend.events.send('user.signed_up')` with no
+  idempotency check, and `applyPendingConsent()` in `Analytics.tsx` is
+  deliberately called from two listeners to cover both magic-link redirect
+  shapes. Most likely trigger: magic link opens in a new tab while the
+  original stays open — both independently read/act on the same
+  `askhoot_marketing_consent` localStorage flag before either clears it.
+- Added a same-tab guard (`useRef`) in `Analytics.tsx` as an immediate,
+  low-risk stopgap — does NOT close the cross-tab race. Real fix tracked as
+  BKL-024 (server-side idempotency column on `profiles`) — needs a migration,
+  deferred rather than rushed pre-launch.
+- Decision-follow-up automation (Resend workflow, `decision.completed`
+  trigger) confirmed NOT reproducible as a code bug — `resend-event` fires
+  correctly from `DecisionMaker.tsx` only after a successful authenticated
+  save (anonymous decisions never reach this code path, by design/RLS).
+  Likely cause is in the Resend workflow itself — flagged for Isaac to check:
+  (1) whether "Wait for event: decision.completed" is placed directly under
+  its own matching "Custom event: decision.completed" trigger, which would
+  make it wait for a SECOND occurrence of an event most users only fire once;
+  (2) whether the test contact actually has marketing consent / exists as a
+  Resend contact at all; (3) Resend's Logs for whether the event is arriving.
+- Also flagged: the Welcome Email workflow has an "Update contact: Clear
+  profiles.email" step that looks like leftover/misconfigured test content —
+  unrelated to the follow-up bug but worth removing.
+
 ## 2026-07-02 — New templates (Baby Items, Smart Home), hid Home Purchase, richer examples
 - Added `baby` (car seat) and `smart-home` (smart light bulbs) templates to
   `lib/templates.ts`, based on `askhoot_usecases_share.md`'s stronger example set

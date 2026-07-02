@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import posthog from 'posthog-js';
 import { createClient } from '@/lib/supabase/client';
 import { updateMarketingConsent } from '@/lib/profile';
@@ -14,6 +14,16 @@ import { trackEvent } from '@/lib/analytics';
  * The trackEvent() abstraction in lib/analytics.ts remains unchanged.
  */
 export default function Analytics() {
+  // Guards against applyPendingConsent() firing twice in THIS tab — it's
+  // deliberately called from two listeners below (initial getUser() AND
+  // onAuthStateChange SIGNED_IN) to cover both magic-link redirect shapes.
+  // Does NOT protect against a second browser tab (e.g. the magic link
+  // opening in a new tab while the original stays open) independently
+  // reading the same localStorage flag before either clears it — that
+  // residual race is the more likely cause of the duplicate welcome email
+  // and needs a server-side idempotency check (see BACKLOG BKL-024).
+  const consentApplied = useRef(false);
+
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     // ui_host: PostHog's real domain — used for toolbar and session recordings.
@@ -90,8 +100,10 @@ export default function Analytics() {
     // Called on initial load AND on SIGNED_IN so it's covered regardless
     // of whether the magic link redirect fires INITIAL_SESSION or SIGNED_IN.
     function applyPendingConsent() {
+      if (consentApplied.current) return; // already handled in this tab
       const pending = localStorage.getItem('askhoot_marketing_consent');
       if (pending !== null) {
+        consentApplied.current = true;
         updateMarketingConsent(pending === 'true');
         localStorage.removeItem('askhoot_marketing_consent');
       }
