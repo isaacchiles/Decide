@@ -18,6 +18,19 @@ env var, new table), update `CLAUDE.md` in the same commit — this file records
 
 ---
 
+## 2026-07-02 — New templates (Baby Items, Smart Home), hid Home Purchase, richer examples
+- Added `baby` (car seat) and `smart-home` (smart light bulbs) templates to
+  `lib/templates.ts`, based on `askhoot_usecases_share.md`'s stronger example set
+- Hid Home Purchase template — added a `hidden` flag to `Template` type rather
+  than deleting it, so it's easy to bring back. Template picker in
+  `DecisionMaker.tsx` now filters `!t.hidden`
+- Mapped both new templates to the `product` (Amazon) affiliate vertical in
+  `lib/affiliate.ts` — `TEMPLATE_VERTICALS` takes priority over AI/keyword
+  classification, so this was necessary for affiliate CTAs to resolve correctly
+- Added one more constraint + one more preference to each of the 8 rotating
+  "Try an example" sets — modeling slightly richer input to nudge users toward
+  sharing more detail, without turning the examples into a wall of text
+
 ## 2026-07-02 — HOTFIX: "Could not parse AI response" on generate-matrix
 - Root cause: Sonnet 5 has adaptive thinking on by default, so a `thinking`
   content block can precede the `text` block in the response. All 3 AI routes

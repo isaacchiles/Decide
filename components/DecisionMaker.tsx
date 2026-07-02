@@ -47,43 +47,43 @@ const DEMO_SCORES: Scores = {
 const EXAMPLES = [
   {
     decision: 'I need to buy a laptop for work',
-    constraints: ['Under $1,500', 'At least 16 GB RAM', 'Battery life over 8 hours'],
-    preferences: ['I prefer macOS', 'Lightweight and portable', 'Fast SSD storage'],
+    constraints: ['Under $1,500', 'At least 16 GB RAM', 'Battery life over 8 hours', 'Reliable webcam for video calls'],
+    preferences: ['I prefer macOS', 'Lightweight and portable', 'Fast SSD storage', 'Minimal bloatware — clean setup'],
   },
   {
     decision: "I'm choosing a new mattress",
-    constraints: ['Under $1,200 for a queen', 'Ships free with easy returns', 'Trial period required'],
-    preferences: ['I sleep on my side', 'Medium-firm feel', 'Cooling materials — I run hot'],
+    constraints: ['Under $1,200 for a queen', 'Ships free with easy returns', 'Trial period required', 'No fiberglass in the layers'],
+    preferences: ['I sleep on my side', 'Medium-firm feel', 'Cooling materials — I run hot', 'Good motion isolation — I share the bed'],
   },
   {
     decision: 'I need to pick a streaming service',
-    constraints: ['Under $15/month', 'Works on multiple devices', 'No long-term contract'],
-    preferences: ['I love documentaries and drama', 'Original content matters to me', 'Offline downloads are a plus'],
+    constraints: ['Under $15/month', 'Works on multiple devices', 'No long-term contract', '4K streaming supported'],
+    preferences: ['I love documentaries and drama', 'Original content matters to me', 'Offline downloads are a plus', 'Kid profiles / parental controls'],
   },
   {
     decision: 'I need to buy paper towels',
-    constraints: ['Under $30 for a bulk pack', 'Strong enough for kitchen spills', 'Septic-safe'],
-    preferences: ['I prefer name brands', 'Soft texture is a bonus', 'No added fragrance'],
+    constraints: ['Under $30 for a bulk pack', 'Strong enough for kitchen spills', 'Septic-safe', 'Available nearby or fast shipping'],
+    preferences: ['I prefer name brands', 'Soft texture is a bonus', 'No added fragrance', 'Fewer sheets wasted per roll'],
   },
   {
     decision: "I'm choosing an apartment to rent",
-    constraints: ['Under $2,000/month', 'Must allow pets', 'Within 30 minutes of downtown'],
-    preferences: ['In-unit laundry is a must', "I'd love a home office space", 'Parking matters to me'],
+    constraints: ['Under $2,000/month', 'Must allow pets', 'Within 30 minutes of downtown', 'Lease of 12 months or less'],
+    preferences: ['In-unit laundry is a must', "I'd love a home office space", 'Parking matters to me', 'Good natural light'],
   },
   {
     decision: 'I need to choose the right running shoes',
-    constraints: ['Under $160', 'Available in wide sizes', 'Good for road running'],
-    preferences: ['I pronate slightly', 'I prefer neutral colors', 'Lightweight over cushioned'],
+    constraints: ['Under $160', 'Available in wide sizes', 'Good for road running', 'Breathable for warm weather'],
+    preferences: ['I pronate slightly', 'I prefer neutral colors', 'Lightweight over cushioned', 'Fine on light trails too'],
   },
   {
     decision: "I'm deciding on a standing desk",
-    constraints: ['Under $600', 'Electric height adjustment', 'Fits in a 10×10 ft office'],
-    preferences: ['I prefer a dark wood finish', 'Built-in cable management', 'Memory presets for heights'],
+    constraints: ['Under $600', 'Electric height adjustment', 'Fits in a 10×10 ft office', 'Easy to assemble alone'],
+    preferences: ['I prefer a dark wood finish', 'Built-in cable management', 'Memory presets for heights', 'Quiet motor — small home office'],
   },
   {
     decision: 'I need to buy a family car',
-    constraints: ['Under $40,000', 'Must fit 3 car seats', 'Electric or hybrid preferred'],
-    preferences: ['I prefer Toyota or Honda', 'I like SUVs', 'Reliability over features'],
+    constraints: ['Under $40,000', 'Must fit 3 car seats', 'Electric or hybrid preferred', 'Good resale value'],
+    preferences: ['I prefer Toyota or Honda', 'I like SUVs', 'Reliability over features', 'Advanced safety features like lane assist'],
   },
 ];
 
@@ -807,7 +807,7 @@ export default function DecisionMaker() {
               Start from a template
             </label>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {TEMPLATES.map(t => (
+              {TEMPLATES.filter(t => !t.hidden).map(t => (
                 <button
                   key={t.id}
                   onClick={() => applyTemplate(t)}

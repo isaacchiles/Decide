@@ -6,6 +6,9 @@ export type Template = {
   decision: string;
   constraints: string[];
   preferences: string[];
+  // Kept in the list (not deleted) but excluded from the template picker UI.
+  // Used to pull a template from rotation without losing the content.
+  hidden?: boolean;
 };
 
 export const TEMPLATES: Template[] = [
@@ -27,6 +30,40 @@ export const TEMPLATES: Template[] = [
     ],
   },
   {
+    id: 'baby',
+    emoji: '👶',
+    name: 'Baby Items',
+    description: 'Find the safest car seat for your child and vehicle',
+    decision: 'I need to buy a car seat for my baby',
+    constraints: [
+      'Top crash-test safety ratings',
+      'Fits our vehicle model',
+      'Not expired or close to its expiration date',
+    ],
+    preferences: [
+      'Easy for one person to install correctly',
+      'Convertible — grows with my child',
+      'Cover is machine-washable',
+    ],
+  },
+  {
+    id: 'smart-home',
+    emoji: '💡',
+    name: 'Smart Home',
+    description: 'Find the right smart light bulbs for your setup',
+    decision: 'I need to buy smart light bulbs for my home',
+    constraints: [
+      'Works with Alexa, Google Home, or HomeKit',
+      'Under $50 for a 4-pack',
+      'No separate hub required',
+    ],
+    preferences: [
+      'Wide color range, not just white/warm',
+      'Reliable app with minimal lag',
+      'Energy efficient with a long lifespan',
+    ],
+  },
+  {
     id: 'home',
     emoji: '🏠',
     name: 'Home Purchase',
@@ -42,6 +79,7 @@ export const TEMPLATES: Template[] = [
       'Short commute to work',
       'Quiet neighborhood',
     ],
+    hidden: true,
   },
   {
     id: 'job',
